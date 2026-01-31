@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculadora Salarial Docente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#24496e" />
+  <style>
+    :root{
+      --azul-oscuro:#24496e;
+      --morado:#4d3069;
+      --celeste:#3d8fb0;
+      --beige:#f3efdc;
+      --rojo:#da6863;
+
+      --bg: var(--beige);
+      --card: #ffffff;
+      --text: #14324f;
+      --muted: rgba(20,50,79,.72);
+      --border: rgba(61,143,176,.35);
+      --shadow: 0 10px 28px rgba(0,0,0,.08);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --focus: 0 0 0 4px rgba(61,143,176,.25);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Layout */
+    .app{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      padding: 14px 14px calc(92px + env(safe-area-inset-bottom));
+      gap: 14px;
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: linear-gradient(180deg, rgba(243,239,220,.92), rgba(243,239,220,.72));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,.05);
+      padding: 10px 6px 12px;
+    }
+
+    .brand{
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .brand h1{
+      margin:0;
+      font-size: 1.15rem;
+      line-height: 1.2;
+      letter-spacing: .2px;
+      color: var(--morado);
+      font-weight: 900;
+    }
+    .brand .sub{
+      margin-top:6px;
+      font-size: .9rem;
+      color: rgba(77,48,105,.95);
+      font-weight: 700;
+    }
+    .brand .sub a{
+      color: var(--celeste);
+      text-decoration: none;
+      font-weight: 800;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border: 1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.7);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: .82rem;
+      color: var(--muted);
+      white-space: nowrap;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    }
+    .pill strong{ color: var(--azul-oscuro); }
+
+    .container{
+      max-width: 980px;
+      width: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 980px){
+      .container{
+        grid-template-columns: 1.05fr .95fr;
+        align-items: start;
+      }
+      .app{
+        padding: 18px 18px calc(92px + env(safe-area-inset-bottom));
+      }
+      .brand h1{ font-size: 1.3rem; }
+    }
+
+    /* Cards */
+    .panel{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel .hd{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .panel .hd .title{
+      font-weight: 900;
+      color: var(--azul-oscuro);
+      letter-spacing: .2px;
+      font-size: 1rem;
+    }
+    .panel .bd{
+      padding: 14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 560px){
+      .grid.two{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .field label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      font-size: .9rem;
+      font-weight: 850;
+      color: var(--azul-oscuro);
+      margin-bottom: 6px;
+    }
+
+    .hint{
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: 6px;
+    }
+
+    input, select{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(36,73,110,.22);
+      background: #fff;
+      padding: 12px 12px;
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+      transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+    }
+
+    input:focus, select:focus{
+      border-color: rgba(61,143,176,.9);
+      box-shadow: var(--focus);
+    }
+
+    input[type="number"]{ appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+
+    .mono{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .1px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px dashed rgba(77,48,105,.35);
+      background: rgba(77,48,105,.06);
+      padding: 8px 10px;
+      font-size: .86rem;
+      color: rgba(77,48,105,.95);
+      font-weight: 850;
+    }
+
+    details.note{
+      border-radius: 14px;
+      border: 1px solid rgba(61,143,176,.28);
+      background: linear-gradient(180deg, rgba(61,143,176,.10), rgba(255,255,255,.6));
+      padding: 10px 12px;
+    }
+    details.note summary{
+      cursor: pointer;
+      list-style: none;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 900;
+      color: var(--azul-oscuro);
+      font-size: .92rem;
+    }
+    details.note summary::-webkit-details-marker{ display:none; }
+    details.note .content{
+      margin-top: 8px;
+      font-size: .9rem;
+      color: rgba(0,0,0,.68);
+      line-height: 1.45;
+    }
+
+    /* Dynamic cargo cards */
+    .cards{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .cargo-card{
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.92));
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+      padding: 12px;
+    }
+    .cargo-card .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .cargo-card .row .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(36,73,110,.06);
+      border: 1px solid rgba(36,73,110,.12);
+      color: var(--azul-oscuro);
+      font-weight: 900;
+      font-size: .86rem;
+    }
+    .cargo-card .row .mini{
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .cargo-card .grid{ gap: 10px; }
+
+    /* Result */
+    .result-hero{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .totals{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 560px){
+      .totals{ grid-template-columns: 1fr 1fr; }
+    }
+    .total-box{
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,.08);
+      background: linear-gradient(180deg, rgba(61,143,176,.10), rgba(255,255,255,1));
+      padding: 12px;
+    }
+    .total-box .k{
+      color: rgba(77,48,105,.95);
+      font-weight: 900;
+      font-size: .9rem;
+      margin-bottom: 6px;
+    }
+    .total-box .v{
+      font-size: 1.25rem;
+      font-weight: 950;
+      color: var(--azul-oscuro);
+    }
+
+    .breakdown{
+      margin-top: 10px;
+    }
+    .breakdown h3{
+      margin: 18px 0 10px;
+      font-size: 1rem;
+      color: var(--azul-oscuro);
+      letter-spacing: .2px;
+    }
+    .breakdown ul{
+      list-style:none;
+      margin:0;
+      padding:0;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,.08);
+      overflow:hidden;
+      background: #fff;
+    }
+    .breakdown li{
+      padding: 10px 12px;
+      border-top: 1px solid rgba(0,0,0,.06);
+      font-size: .94rem;
+      color: rgba(0,0,0,.74);
+    }
+    .breakdown li:first-child{ border-top: 0; }
+    .breakdown li strong{ color: var(--azul-oscuro); }
+    .warning{
+      color: var(--rojo) !important;
+      font-weight: 950 !important;
+    }
+
+    /* Bottom action bar */
+    .actions{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 60;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(243,239,220,0), rgba(243,239,220,.92) 30%, rgba(243,239,220,1));
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0,0,0,.06);
+    }
+    .actions .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      gap: 10px;
+    }
+    .btn{
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 14px;
+      font-size: 1rem;
+      font-weight: 950;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+    .btn.primary{
+      background: var(--morado);
+      color: #fff;
+    }
+    .btn.secondary{
+      background: var(--celeste);
+      color: #fff;
+    }
+    .btn.ghost{
+      background: #fff;
+      color: var(--azul-oscuro);
+      border: 1px solid rgba(36,73,110,.18);
+      box-shadow: 0 10px 20px rgba(0,0,0,.07);
+    }
+
+    /* Small helpers */
+    .skeleton{
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.08), rgba(0,0,0,.05));
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+    }
+    @keyframes shimmer{
+      0%{ background-position: 200% 0; }
+      100%{ background-position: -200% 0; }
+    }
+
+    .foot{
+      max-width: 980px;
+      margin: 6px auto 0;
+      text-align:center;
+      font-size: .9rem;
+      color: rgba(36,73,110,.9);
+      font-weight: 650;
+    }
+    .foot .muted{ color: rgba(36,73,110,.75); font-weight: 650; }
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(92px + env(safe-area-inset-bottom));
+      z-index: 70;
+      background: rgba(0,0,0,.82);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: .9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div>
+        <h1>Calculadora Salarial Docente</h1>
+        <div class="sub">
+          Desarrollada por Docentes Brown • IG:
+          <a href="https://www.instagram.com/docentesbrown" target="_blank" rel="noopener">@docentesbrown</a>
+        </div>
+      </div>
+
+      <div class="pill" id="basicSalaryDisplay"><span style="opacity:.8">Básico</span> <strong class="mono">—</strong></div>
+    </div>
+  </header>
+
+  <main class="app">
+    <div class="container">
+      <!-- Inputs -->
+      <section class="panel" aria-label="Datos de cálculo">
+        <div class="hd">
+          <div class="title">1) Completá tus datos</div>
+          <div class="badge" id="monthBadge">📅 Mes</div>
+        </div>
+
+        <div class="bd">
+          <div class="grid two">
+            <div class="field">
+              <label for="monthSelect">
+                Mes
+                <span class="hint" id="monthHelp">Se carga desde la planilla</span>
+              </label>
+              <div id="monthLoading" class="skeleton" aria-hidden="true"></div>
+              <select id="monthSelect" style="display:none" aria-describedby="monthHelp"></select>
+            </div>
+
+            <div class="field">
+              <label for="globalAntig">Antigüedad (años)</label>
+              <input type="number" id="globalAntig" min="0" inputmode="numeric" placeholder="Ej: 10" />
+              <div class="hint">Se aplica a cada cargo.</div>
+            </div>
+
+            <div class="field">
+              <label for="positionCount">Cantidad de cargos</label>
+              <input type="number" id="positionCount" min="1" value="1" inputmode="numeric" />
+              <div class="hint">Si tenés módulos en niveles distintos, poné un cargo por nivel.</div>
+            </div>
+
+            <details class="note">
+              <summary>
+                💡 Tip para módulos en distintos niveles
+                <span style="opacity:.65">Ver</span>
+              </summary>
+              <div class="content">
+                Si trabajás con módulos en diferentes niveles educativos, elegí tantos cargos como niveles tengas.
+                Ejemplo: Secundaria + Primaria → poné <strong>2 cargos</strong> y se abre un cuadro para cada uno.
+              </div>
+            </details>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="title" style="font-weight:950;color:var(--azul-oscuro);margin-bottom:10px;">2) Cargos</div>
+          <div id="cardsContainer" class="cards"></div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section class="panel" aria-label="Resultados">
+        <div class="hd">
+          <div class="title">3) Resultado</div>
+          <div class="badge">🧾 Estimativo</div>
+        </div>
+
+        <div class="bd">
+          <div class="result-hero">
+            <div class="hint">
+              Tocá <strong>Calcular</strong> y acá te aparece el total, el bolsillo y el detalle completo.
+            </div>
+
+            <div id="resultDisplay" class="totals" aria-live="polite"></div>
+            <div id="salaryBreakdown" class="breakdown"></div>
+
+            <div class="foot" style="margin-top:14px">
+              <div id="visit-counter">Cargando contador de visitas…</div>
+              <div class="muted" style="margin-top:6px">
+                Este cálculo es orientativo y no reemplaza el recibo oficial.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Action bar -->
+  <div class="actions" role="navigation" aria-label="Acciones">
+    <div class="wrap">
+      <button id="calculateBtn" class="btn primary">Calcular</button>
+      <button id="printPDFBtn" class="btn ghost" title="Generar PDF">PDF</button>
+      <button onclick="compartirApp()" class="btn secondary" title="Compartir">Compartir</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ======== Lógica original (sin cambiar cálculos). Solo UI/estructura mejorada. ========
+
+    const sheetId = '1UVE9egJbF5SnN14h1s7qJPyvYAKcy8rynyOAfNO3jWo';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+    const basicMap = {};
+    let cargosList = new Set();
+
+    const monthSelect = document.getElementById('monthSelect');
+    const basicDisplay = document.getElementById('basicSalaryDisplay');
+    const positionCount = document.getElementById('positionCount');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultDisplay = document.getElementById('resultDisplay');
+    const salaryBreakdown = document.getElementById('salaryBreakdown');
+    const globalAntig = document.getElementById('globalAntig');
+
+    const monthLoading = document.getElementById("monthLoading");
+    const monthBadge = document.getElementById("monthBadge");
+
+    const money = (n) => {
+      const num = Number(n) || 0;
+      try{
+        return new Intl.NumberFormat('es-AR', { style:'currency', currency:'ARS', maximumFractionDigits: 2 }).format(num);
+      }catch(e){
+        return '$' + num.toFixed(2);
+      }
+    };
+
+    function toast(msg){
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    const antiguedadMap = {
+      0: 0.21, 1: 0.21, 2: 0.24, 3: 0.24, 4: 0.33, 5: 0.33, 6: 0.33,
+      7: 0.43, 8: 0.43, 9: 0.43, 10: 0.54, 11: 0.54, 12: 0.64, 13: 0.64,
+      14: 0.64, 15: 0.74, 16: 0.74, 17: 0.84, 18: 0.84, 19: 0.84,
+      20: 1.05, 21: 1.05, 22: 1.15, 23: 1.15, "mas de 24": 1.24
+    };
+
+    const desfavMap = { 0: 0, 1: 0.30, 2: 0.60, 3: 0.90, 4: 1.00, 5: 1.20 };
+
+    const indicesBasico = {
+      'Maestro de Grado': 1.1,
+      'Maestro de Inicial': 1.1,
+      'Preceptor (Inicial)': 1,
+      'Preceptor (Sec/Sup)': 1,
+      'Profesor Módulos Secundaria': 0.1,
+      'Profesor Módulos Inicial': 0.06666666667,
+      'Profesor Módulos Primaria': 0.08333333333,
+      'Profesor Módulos Superior': 0.125,
+      'Bibliotecario Inicial & Primaria': 1.1,
+      'Bibliotecario Secundaria & Superior': 1.2,
+      'EMATP': 1.2,
+      'Maestro Especial': 1.1,
+      'Equipo de Orientación': 1.1
+    };
+
+    fetch(url)
+      .then(response => response.text())
+      .then(data => {
+        const jsonText = data.substring(47).slice(0, -2);
+        const jsonData = JSON.parse(jsonText);
+        const rows = jsonData.table.rows;
+
+        rows.forEach(row => {
+          const cells = row.c;
+          if (cells[0] && cells[0].v) {
+            const mes = String(cells[0].v).trim();
+            const basico = (cells[1] && cells[1].v !== null && cells[1].v !== undefined) ? Number(cells[1].v) : null;
+
+            if (mes && basico !== null && !Number.isNaN(basico)) {
+              monthSelect.appendChild(new Option(mes, basico));
+              basicMap[mes] = basico;
+            }
+          }
+          if (cells[2] && cells[2].v) cargosList.add(cells[2].v);
+        });
+
+        // UI: mostrar select cuando está listo
+        monthLoading.style.display = "none";
+        monthSelect.style.display = "block";
+
+        updateCards();
+
+        monthSelect.addEventListener('change', () => {
+          const bas = Number(monthSelect.value) || 0;
+          basicDisplay.innerHTML = `<span style="opacity:.8">Básico</span> <strong class="mono">${money(bas)}</strong>`;
+          monthBadge.textContent = "📅 " + (monthSelect.selectedOptions[0]?.textContent || "Mes");
+        });
+
+        if (monthSelect.options.length > 0) {
+          const basInicial = Number(monthSelect.value) || 0;
+          basicDisplay.innerHTML = `<span style="opacity:.8">Básico</span> <strong class="mono">${money(basInicial)}</strong>`;
+          monthBadge.textContent = "📅 " + (monthSelect.selectedOptions[0]?.textContent || "Mes");
+        }
+      })
+      .catch(() => {
+        monthLoading.style.display = "none";
+        monthSelect.style.display = "block";
+        monthSelect.innerHTML = "";
+        monthSelect.appendChild(new Option("No se pudo cargar el mes (revisar conexión)", "0"));
+        basicDisplay.innerHTML = `<span style="opacity:.8">Básico</span> <strong class="mono">${money(0)}</strong>`;
+        monthBadge.textContent = "📅 Mes";
+      });
+
+    positionCount.addEventListener('input', updateCards);
+
+    function updateCards() {
+      cardsContainer.innerHTML = '';
+      const count = parseInt(positionCount.value) || 0;
+
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'cargo-card';
+
+        const header = document.createElement('div');
+        header.className = 'row';
+        header.innerHTML = `
+          <div class="chip">Cargo ${i + 1}</div>
+          <div class="mini">Completá los campos</div>
+        `;
+
+        const grid = document.createElement('div');
+        grid.className = 'grid two';
+
+        const fieldCargo = document.createElement('div');
+        fieldCargo.className = 'field';
+        const labelCargo = document.createElement('label');
+        labelCargo.setAttribute('for', 'cargo' + i);
+        labelCargo.textContent = 'Tipo de cargo';
+        const selectCargo = document.createElement('select');
+        selectCargo.id = 'cargo' + i;
+        selectCargo.setAttribute('aria-label', 'Cargo ' + (i + 1));
+        cargosList.forEach(cargo => selectCargo.appendChild(new Option(cargo, cargo)));
+        fieldCargo.appendChild(labelCargo);
+        fieldCargo.appendChild(selectCargo);
+
+        const fieldDesf = document.createElement('div');
+        fieldDesf.className = 'field';
+        const labelDesf = document.createElement('label');
+        labelDesf.setAttribute('for', 'desf' + i);
+        labelDesf.textContent = 'Desfavorabilidad';
+        const selectDesf = document.createElement('select');
+        selectDesf.id = 'desf' + i;
+        for (let j = 0; j <= 5; j++) selectDesf.appendChild(new Option(j, j));
+        fieldDesf.appendChild(labelDesf);
+        fieldDesf.appendChild(selectDesf);
+
+        const fieldMod = document.createElement('div');
+        fieldMod.className = 'field';
+        fieldMod.style.gridColumn = "1 / -1";
+        const labelMod = document.createElement('label');
+        labelMod.setAttribute('for', 'modulos' + i);
+        labelMod.innerHTML = `Módulos <span class="hint">(solo para cargos por módulos)</span>`;
+        const modulosInput = document.createElement('input');
+        modulosInput.type = 'number';
+        modulosInput.id = 'modulos' + i;
+        modulosInput.placeholder = 'Cantidad de módulos';
+        modulosInput.min = 0;
+        modulosInput.inputMode = "numeric";
+        fieldMod.appendChild(labelMod);
+        fieldMod.appendChild(modulosInput);
+
+        grid.appendChild(fieldCargo);
+        grid.appendChild(fieldDesf);
+        grid.appendChild(fieldMod);
+
+        card.appendChild(header);
+        card.appendChild(grid);
+
+        cardsContainer.appendChild(card);
+      }
+    }
+
+    calculateBtn.addEventListener('click', () => {
+      const basico = Number(monthSelect.value) || 0;
+      salaryBreakdown.innerHTML = '';
+      let total = 0;
+      let breakdownHTML = '<h3>Detalle del sueldo</h3><ul>';
+
+      const antig = globalAntig.value;
+      const antigPorcentaje = antiguedadMap[antig] || 0;
+
+      const count = parseInt(positionCount.value) || 0;
+
+      // Topes globales de módulos (según tu código actual)
+      let totalAdicional455 = 0;
+      let totalAdicional667 = 0;
+      const maxAdicional455 = 243398;
+      const maxAdicional667 = 236961.2;
+
+      for (let i = 0; i < count; i++) {
+        const cargo = document.getElementById('cargo' + i).value;
+        const desf = parseInt(document.getElementById('desf' + i).value) || 0;
+        const modulos = parseInt(document.getElementById('modulos' + i).value) || 0;
+
+        breakdownHTML += `<li><strong>Cargo ${i + 1} - ${cargo}</strong></li>`;
+
+        let subtotal = 0;
+        let detalle = '';
+        let basicoCargo = basico * (indicesBasico[cargo] || 1);
+
+        if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
+          subtotal = basicoCargo + 200967.17 + 121699 + 211938 + 399.56;
+          detalle += `
+            <li>0110 Básico: ${money(basicoCargo)}</li>
+            <li>0641 Bonificación 1º y 2º ciclo: ${money(200967.17)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: ${money(121699)}</li>
+            <li>0438 Bonificación remunerativa: ${money(211938)}</li>
+            <li>2761 Garantía sin aportes: ${money(399.56)}</li>
+          `;
+        } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
+          subtotal = basicoCargo + 121699 + 118480.65 + 223463.50 + 450.14;
+          detalle += `
+            <li>0110 Básico: ${money(basicoCargo)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: ${money(121699)}</li>
+            <li>0667 Bonificación Hs/Mod. Media: ${money(118480.65)}</li>
+            <li>0451 Suma No Bonificable: ${money(223463.50)}</li>
+            <li>2761 Garantía sin aportes: ${money(450.14)}</li>
+          `;
+        } else if (cargo === 'Maestro Especial') {
+          subtotal = basicoCargo + 233961.78 + 59990.2 + 121699 + 211938;
+          detalle += `
+            <li>0110 Básico: ${money(basicoCargo)}</li>
+            <li>0623 Plus Enseñanza: ${money(233961.78)}</li>
+            <li>0640 Bonificación Función Especial: ${money(59990.2)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(121699)}</li>
+            <li>0438 Bonificación remunerativa no bonificante: ${money(211938)}</li>
+          `;
+        } else if (cargo === 'Preceptor (Inicial)') {
+          subtotal = basicoCargo + 200967.17 + 121699 + 507.54 + 202.55;
+          detalle += `
+            <li>0110 Básico: ${money(basicoCargo)}</li>
+            <li>0623 Plus Enseñanza: ${money(200967.17)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(121699)}</li>
+            <li>2761 Garantía Sin aportes: ${money(507.54)}</li>
+            <li>0648 Garantía Con aportes: ${money(202.55)}</li>
+          `;
+        } else if (cargo === 'Preceptor (Sec/Sup)') {
+          subtotal = basicoCargo + 202.56 + 313898.72 + 121699 + 507.54;
+          detalle += `
+            <li>0110 Básico: ${money(basicoCargo)}</li>
+            <li>0648 Garantía con aportes 730: ${money(202.56)}</li>
+            <li>0653 Bonificación PR: ${money(313898.72)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(121699)}</li>
+            <li>2761 Garantía Sin aportes 930: ${money(507.54)}</li>
+          `;
+        } else if (cargo === 'Equipo de Orientación') {
+          subtotal = basicoCargo + 211938 + 121699 + 233961.78 + 298.43;
+          detalle += `
+            <li>0110 Básico: ${money(basicoCargo)}</li>
+            <li>0438 Bonf. Remun. 2014: ${money(211938)}</li>
+            <li>0623 Plus de Enseñanza: ${money(233961.78)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(121699)}</li>
+            <li>2761 Garantía Sin aportes 930: ${money(298.43)}</li>
+          `;
+        } else if (cargo.includes('Módulos')) {
+          const valorModulo = basicoCargo;
+          basicoCargo = valorModulo * modulos;
+
+          const proporcional455 = valorModulo * modulos * 0.4057;
+          const proporcional667 = valorModulo * modulos * 0.395;
+
+          const disponible455 = maxAdicional455 - totalAdicional455;
+          const disponible667 = maxAdicional667 - totalAdicional667;
+
+          const adicional455 = Math.min(proporcional455, Math.max(0, disponible455));
+          const adicional667 = Math.min(proporcional667, Math.max(0, disponible667));
+
+          totalAdicional455 += adicional455;
+          totalAdicional667 += adicional667;
+
+          const adicionalDesf = valorModulo * (desfavMap[desf] || 0) * modulos;
+          const adicionalAntig = valorModulo * (antiguedadMap[antig] || 0) * modulos;
+
+          subtotal = basicoCargo + adicional667 + adicional455 + adicionalDesf + adicionalAntig;
+
+          detalle += `
+            <li>Valor por módulo: ${money(valorModulo)}</li>
+            <li>Módulos: ${modulos} × ${money(valorModulo)} = ${money(basicoCargo)}</li>
+            <li>667 Bonificación No Jerárquica (39.5%): ${money(adicional667)}</li>
+            <li>455 Bonif. Docente agosto 2008 (40.57%): ${money(adicional455)}</li>
+            <li>Adicional desfavorabilidad: ${money(adicionalDesf)}</li>
+            <li>Antigüedad (${antig} años): ${money(adicionalAntig)}</li>
+          `;
+
+          if (proporcional455 > disponible455 || proporcional667 > disponible667) {
+            detalle += `<li class="warning">¡ATENCIÓN! Se aplicó tope máximo global para este cargo</li>`;
+          }
+        } else {
+          subtotal = basicoCargo;
+          detalle += `<li>Salario básico ajustado: ${money(subtotal)}</li>`;
+        }
+
+        if (!cargo.includes('Módulos')) {
+          const adicionalDesf = basico * (desfavMap[desf] || 0);
+          subtotal += adicionalDesf;
+          detalle += `<li>Adicional desfavorabilidad: ${money(adicionalDesf)}</li>`;
+
+          const adicionalAntig = basicoCargo * antigPorcentaje;
+          subtotal += adicionalAntig;
+          detalle += `<li>Antigüedad (${antig} años): ${money(adicionalAntig)}</li>`;
+        }
+
+        breakdownHTML += detalle;
+        total += subtotal;
+      }
+
+      const descuentoIPS = total * 0.16;
+      const descuentoIOMA = total * 0.048;
+      const salarioBolsi = total - descuentoIPS - descuentoIOMA;
+
+      breakdownHTML += `
+        </ul>
+        <h3>Resumen de adicionales para módulos</h3>
+        <ul>
+          <li>Total 455 Bonif. Docente: ${money(totalAdicional455)} / ${money(maxAdicional455)}</li>
+          <li>Total 667 Bonif. No Jerárquica: ${money(totalAdicional667)} / ${money(maxAdicional667)}</li>
+        </ul>
+        <h3>Descuentos</h3>
+        <ul>
+          <li>IPS (16%): -${money(descuentoIPS)}</li>
+          <li>IOMA (4.8%): -${money(descuentoIOMA)}</li>
+        </ul>
+      `;
+
+      resultDisplay.innerHTML = `
+        <div class="total-box">
+          <div class="k">Salario total estimado</div>
+          <div class="v mono">${money(total)}</div>
+        </div>
+        <div class="total-box">
+          <div class="k">Salario de bolsillo</div>
+          <div class="v mono">${money(salarioBolsi)}</div>
+        </div>
+      `;
+      salaryBreakdown.innerHTML = breakdownHTML;
+
+      // UX: bajar a resultados (sin tocar cálculos)
+      setTimeout(() => {
+        document.querySelector('[aria-label="Resultados"]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    });
+
+    // Compartir (igual a tu versión, con fallback más amable)
+    async function compartirApp() {
+      const payload = {
+        title: 'Calculadora Salarial Docente',
+        text: 'Mirá esta calculadora gratuita para docentes de la Provincia de Buenos Aires.',
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        try { await navigator.share(payload); } catch (e) {}
+      } else {
+        try{
+          await navigator.clipboard.writeText(window.location.href);
+          toast("Link copiado ✅");
+        }catch(e){
+          alert('La función de compartir no está disponible. Copiá el enlace manualmente:\n\n' + window.location.href);
+        }
+      }
+    }
+    window.compartirApp = compartirApp;
+  </script>
+
+  <!-- ✅ CONTADOR DE VISITAS (misma lógica) -->
+  <script>
+    const VISIT_COUNTER_URL = "https://script.google.com/macros/s/AKfycbyj9hY6xRX6XZzmTIpGPJiyo_WA6z3XiEAstn4Nsb5R4N8u0OvUpUcfZI-tqZqu3Rci7w/exec";
+
+    async function fetchJSON(url, options) {
+      const res = await fetch(url, options);
+      return await res.json();
+    }
+
+    async function cargarContadorVisitas() {
+      const el = document.getElementById("visit-counter");
+      try {
+        const data = await fetchJSON(`${VISIT_COUNTER_URL}?t=${Date.now()}`, {
+          method: "POST",
+          redirect: "follow",
+          mode: "cors",
+          cache: "no-store"
+        });
+
+        if (data && data.visitas !== undefined) {
+          el.innerHTML = `👀 <span style="color:#4d3069;font-weight:900;">Visitas acumuladas</span>: <strong class="mono">${data.visitas}</strong>`;
+          return;
+        }
+        throw new Error("Respuesta sin 'visitas'");
+      } catch (err) {
+        try {
+          const data = await fetchJSON(`${VISIT_COUNTER_URL}?t=${Date.now()}`, {
+            method: "GET",
+            redirect: "follow",
+            mode: "cors",
+            cache: "no-store"
+          });
+
+          if (data && data.visitas !== undefined) {
+            el.innerHTML = `👀 <span style="color:#4d3069;font-weight:900;">Visitas acumuladas</span>: <strong class="mono">${data.visitas}</strong>`;
+          } else {
+            el.innerText = "No se pudo cargar el contador de visitas.";
+          }
+        } catch (err2) {
+          el.innerText = "Error al cargar el contador de visitas.";
+        }
+      }
+    }
+
+    cargarContadorVisitas();
+  </script>
+
+  <!-- PDF LIBS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- PDF (misma lógica base, con tu recibo existente) -->
+  <script>
+    function buildReceiptData() {
+      const resumenEl = document.getElementById("resultDisplay");
+      const breakdownEl = document.getElementById("salaryBreakdown");
+
+      const resumenLines = [];
+      resumenEl.querySelectorAll("div").forEach(d => {
+        const t = d.innerText.replace(/\s+/g, " ").trim();
+        if (t) resumenLines.push(t);
+      });
+
+      const sections = [];
+      let current = null;
+
+      Array.from(breakdownEl.children).forEach(node => {
+        if (node.tagName === "H3") {
+          if (current) sections.push(current);
+          current = { title: node.innerText.trim(), items: [] };
+        } else if (node.tagName === "UL") {
+          const lis = Array.from(node.querySelectorAll("li"));
+          lis.forEach(li => {
+            const txt = li.innerText.replace(/\s+/g, " ").trim();
+            if (txt) {
+              if (!current) current = { title: "Detalle", items: [] };
+              current.items.push({ text: txt, isWarning: li.classList.contains("warning") });
+            }
+          });
+        }
+      });
+      if (current) sections.push(current);
+
+      return { resumenLines, sections };
+    }
+
+    function makeWatermarkLayer() {
+      const wm = document.createElement("div");
+      wm.style.position = "absolute";
+      wm.style.inset = "0";
+      wm.style.opacity = "0.10";
+      wm.style.pointerEvents = "none";
+      wm.style.zIndex = "0";
+      wm.style.display = "grid";
+      wm.style.gridTemplateColumns = "repeat(3, 1fr)";
+      wm.style.gridAutoRows = "120px";
+      wm.style.transform = "rotate(-28deg) scale(1.08)";
+      wm.style.transformOrigin = "center";
+      for (let i = 0; i < 18; i++) {
+        const t = document.createElement("div");
+        t.style.display = "flex";
+        t.style.alignItems = "center";
+        t.style.justifyContent = "center";
+        t.style.fontSize = "32px";
+        t.style.fontWeight = "700";
+        t.style.color = "#4d3069";
+        t.innerText = "DOCENTES BROWN";
+        wm.appendChild(t);
+      }
+      return wm;
+    }
+
+    function buildReceiptDOM() {
+      const data = buildReceiptData();
+
+      const wrap = document.createElement("div");
+      wrap.id = "db-pdf-wrap";
+      wrap.style.position = "fixed";
+      wrap.style.left = "-10000px";
+      wrap.style.top = "0";
+      wrap.style.width = "794px";
+      wrap.style.background = "#ffffff";
+      wrap.style.color = "#1c1c1c";
+      wrap.style.fontFamily = "Segoe UI, sans-serif";
+      wrap.style.padding = "22px";
+      wrap.style.boxSizing = "border-box";
+
+      const sheet = document.createElement("div");
+      sheet.style.position = "relative";
+      sheet.style.border = "2px solid #24496e";
+      sheet.style.borderRadius = "12px";
+      sheet.style.padding = "18px";
+      sheet.style.overflow = "hidden";
+      sheet.style.minHeight = "1050px";
+      sheet.style.boxSizing = "border-box";
+      sheet.appendChild(makeWatermarkLayer());
+
+      const header = document.createElement("div");
+      header.style.position = "relative";
+      header.style.zIndex = "2";
+      header.style.display = "flex";
+      header.style.justifyContent = "space-between";
+      header.style.alignItems = "flex-start";
+      header.style.gap = "14px";
+
+      const left = document.createElement("div");
+      left.innerHTML = `
+        <div style="font-size:22px;font-weight:800;color:#4d3069;letter-spacing:0.3px;">RECIBO DE SUELDO</div>
+        <div style="margin-top:4px;font-size:13px;color:#24496e;font-weight:700;">DOCENTES BROWN</div>
+        <div style="margin-top:6px;font-size:12px;color:#444;">
+          Documento generado por la calculadora salarial (estimativo).
+        </div>
+      `;
+
+      const right = document.createElement("div");
+      const now = new Date();
+      right.innerHTML = `
+        <div style="text-align:right;font-size:12px;color:#444;">
+          <div><span style="font-weight:700;color:#24496e;">Fecha:</span> ${now.toLocaleDateString()}</div>
+          <div style="margin-top:2px;"><span style="font-weight:700;color:#24496e;">Hora:</span> ${now.toLocaleTimeString()}</div>
+        </div>
+      `;
+
+      header.appendChild(left);
+      header.appendChild(right);
+
+      const summaryRow = document.createElement("div");
+      summaryRow.style.position = "relative";
+      summaryRow.style.zIndex = "2";
+      summaryRow.style.display = "grid";
+      summaryRow.style.gridTemplateColumns = "1fr 1fr";
+      summaryRow.style.gap = "12px";
+      summaryRow.style.marginTop = "14px";
+
+      const boxStyle = `
+        border: 1.5px solid #3d8fb0;
+        border-radius: 10px;
+        padding: 12px;
+        box-sizing: border-box;
+        background: #fbfbfb;
+      `;
+
+      const box1 = document.createElement("div");
+      box1.style = boxStyle;
+      box1.innerHTML = `
+        <div style="font-weight:800;color:#24496e;margin-bottom:6px;">RESUMEN</div>
+        ${data.resumenLines.map(l => `<div style="font-size:13px;margin:3px 0;">${l}</div>`).join("")}
+      `;
+
+      const box2 = document.createElement("div");
+      box2.style = boxStyle;
+      const basicoTxt = (document.getElementById("basicSalaryDisplay")?.innerText || "").trim();
+      const mesSel = document.getElementById("monthSelect");
+      const mesTxt = mesSel && mesSel.selectedOptions.length ? mesSel.selectedOptions[0].textContent.trim() : "";
+      box2.innerHTML = `
+        <div style="font-weight:800;color:#24496e;margin-bottom:6px;">PERÍODO</div>
+        <div style="font-size:13px;margin:3px 0;"><span style="font-weight:700;">Mes:</span> ${mesTxt || "-"}</div>
+        <div style="font-size:13px;margin:3px 0;">${basicoTxt || ""}</div>
+        <div style="font-size:12px;color:#666;margin-top:8px;">
+          * Este recibo replica el detalle mostrado en pantalla.
+        </div>
+      `;
+
+      summaryRow.appendChild(box1);
+      summaryRow.appendChild(box2);
+
+      const details = document.createElement("div");
+      details.style.position = "relative";
+      details.style.zIndex = "2";
+      details.style.marginTop = "14px";
+
+      data.sections.forEach(sec => {
+        const secBox = document.createElement("div");
+        secBox.style.cssText = boxStyle + " margin-top: 12px;";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "900";
+        title.style.color = "#4d3069";
+        title.style.marginBottom = "8px";
+        title.style.fontSize = "14px";
+        title.innerText = (sec.title || "").toUpperCase();
+
+        const table = document.createElement("table");
+        table.style.width = "100%";
+        table.style.borderCollapse = "collapse";
+        table.style.fontSize = "12.5px";
+
+        sec.items.forEach(it => {
+          const tr = document.createElement("tr");
+
+          const td1 = document.createElement("td");
+          td1.style.padding = "6px 6px";
+          td1.style.borderTop = "1px solid #e6e6e6";
+          td1.style.verticalAlign = "top";
+          td1.style.color = it.isWarning ? "#da6863" : "#222";
+          td1.style.fontWeight = it.isWarning ? "800" : "400";
+          td1.innerText = it.text;
+
+          tr.appendChild(td1);
+          table.appendChild(tr);
+        });
+
+        secBox.appendChild(title);
+        secBox.appendChild(table);
+        details.appendChild(secBox);
+      });
+
+      const footer = document.createElement("div");
+      footer.style.position = "relative";
+      footer.style.zIndex = "2";
+      footer.style.marginTop = "14px";
+      footer.style.borderTop = "1px dashed #3d8fb0";
+      footer.style.paddingTop = "10px";
+      footer.style.fontSize = "11px";
+      footer.style.color = "#555";
+      footer.innerHTML = `
+        <div><strong style="color:#24496e;">Docentes Brown</strong> • Calculadora Salarial Docente • @docentesbrown</div>
+        <div style="margin-top:4px;">Este PDF es estimativo y no reemplaza el recibo oficial emitido por el empleador.</div>
+      `;
+
+      sheet.appendChild(header);
+      sheet.appendChild(summaryRow);
+      sheet.appendChild(details);
+      sheet.appendChild(footer);
+
+      wrap.appendChild(sheet);
+      document.body.appendChild(wrap);
+
+      return { wrap, sheet };
+    }
+
+    async function exportReceiptPDF() {
+      const breakdownText = (document.getElementById("salaryBreakdown")?.innerText || "").trim();
+      if (!breakdownText) {
+        alert("Primero calculá el salario para poder imprimir el recibo.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+
+      const { wrap, sheet } = buildReceiptDOM();
+
+      const canvas = await html2canvas(sheet, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth;
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save("recibo_docentes_brown.pdf");
+
+      document.body.removeChild(wrap);
+    }
+
+    document.getElementById("printPDFBtn").addEventListener("click", exportReceiptPDF);
+  </script>
+</body>
+</html>
