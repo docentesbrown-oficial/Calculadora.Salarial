@@ -598,8 +598,8 @@
     // Compensación por conectividad
     // - Cargos: valor fijo por cargo.
     // - Módulos: proporcional según nivel, con tope máximo.
-    const COMPENSACION_CONECTIVIDAD_CARGO = 28700;
-    const COMPENSACION_CONECTIVIDAD_MODULOS_MAX = 57400;
+    const COMPENSACION_CONECTIVIDAD_CARGO = 30135;
+    const COMPENSACION_CONECTIVIDAD_MODULOS_MAX = 60270;
     const topesModulosConectividad = {
       'Inicial': 30,
       'Primaria': 24,
@@ -758,8 +758,8 @@
       // Topes globales de módulos (según tu código actual)
       let totalAdicional455 = 0;
       let totalAdicional667 = 0;
-      const maxAdicional455 = 265198;
-      const maxAdicional667 = 277793.6;
+      const maxAdicional455 = 278458;
+      const maxAdicional667 = 291683.45;
       let totalConectividad = 0;
 
       for (let i = 0; i < count; i++) {
@@ -774,54 +774,54 @@
         let basicoCargo = basico * (indicesBasico[cargo] || 1);
 
         if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
-          subtotal = basicoCargo + 218966.72 + 132599 + 250000 + 399.56;
+          subtotal = basicoCargo + 229915.19 + 139229 + 262500 + 399.56;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0641 Bonificación 1º y 2º ciclo: ${money(218966.72)}</li>
-            <li>0455 Bonificación Docente Agosto 2008: ${money(132599)}</li>
-            <li>0438 Bonificación remunerativa: ${money(250000)}</li>
+            <li>0641 Bonificación 1º y 2º ciclo: ${money(229915.19)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: ${money(139229)}</li>
+            <li>0438 Bonificación remunerativa: ${money(262500)}</li>
             <li>2761 Garantía sin aportes: ${money(399.56)}</li>
           `;
         } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
-          subtotal = basicoCargo + 129557 + 138896.8 + 243477.92;
+          subtotal = basicoCargo + 139229 + 145841.72 + 255651.96;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0455 Bonificación Docente Agosto 2008: ${money(132599)}</li>
-            <li>0667 Bonificación Hs/Mod. Media: ${money(138896.8)}</li>
-            <li>0451 Suma No Bonificable: ${money(243477.92)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: ${money(139229)}</li>
+            <li>0667 Bonificación Hs/Mod. Media: ${money(145841.72)}</li>
+            <li>0451 Suma No Bonificable: ${money(255651.96)}</li>
           `;
         } else if (cargo === 'Maestro Especial') {
-          subtotal = basicoCargo + 254916.48 + 65363.2 + 132599 + 250000;
+          subtotal = basicoCargo + 267662.46 + 68631.40 + 139229 + 262500;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0623 Plus Enseñanza: ${money(254916.48)}</li>
-            <li>0640 Bonificación Función Especial: ${money(65363.2)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(132599)}</li>
-            <li>0438 Bonificación remunerativa no bonificante: ${money(250000)}</li>
+            <li>0623 Plus Enseñanza: ${money(267662.46)}</li>
+            <li>0640 Bonificación Función Especial: ${money(68631.40)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
+            <li>0438 Bonificación remunerativa no bonificante: ${money(262500)}</li>
           `;
         } else if (cargo === 'Preceptor (Inicial)') {
-          subtotal = basicoCargo + 218966.72 + 132599 + 507.54 + 202.55;
+          subtotal = basicoCargo + 229915.19 + 139229 + 507.54 + 39.26;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0623 Plus Enseñanza: ${money(218966.72)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(132599)}</li>
+            <li>0623 Plus Enseñanza: ${money(229915.19)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
             <li>2761 Garantía Sin aportes: ${money(507.54)}</li>
-            <li>0648 Garantía Con aportes: ${money(202.55)}</li>
+            <li>0648 Garantía Con aportes: ${money(39.26)}</li>
           `;
         } else if (cargo === 'Preceptor (Sec/Sup)') {
-          subtotal = basicoCargo + 356719.66 + 132599;
+          subtotal = basicoCargo + 374555.87 + 139229;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0653 Bonificación PR: ${money(356719.66)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(132599)}</li>
+            <li>0653 Bonificación PR: ${money(374555.87)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
           `;
         } else if (cargo === 'Equipo de Orientación') {
-          subtotal = basicoCargo + 250000 + 132599 + 241843.84 + 298.43;
+          subtotal = basicoCargo + 262500 + 139229 + 253936.18 + 298.43;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0438 Bonf. Remun. 2014: ${money(250000)}</li>
-            <li>0623 Plus de Enseñanza: ${money(241843.84)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(132599)}</li>
+            <li>0438 Bonf. Remun. 2014: ${money(262500)}</li>
+            <li>0623 Plus de Enseñanza: ${money(253936.18)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
             <li>2761 Garantía Sin aportes 930: ${money(298.43)}</li>
           `;
         } else if (cargo.includes('Módulos')) {
