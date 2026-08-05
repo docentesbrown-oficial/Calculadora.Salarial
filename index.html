@@ -596,10 +596,12 @@
 
 
     // Compensación por conectividad
-    // - Cargos: valor fijo por cargo.
-    // - Módulos: proporcional según nivel, con tope máximo.
-    const COMPENSACION_CONECTIVIDAD_CARGO = 30135;
-    const COMPENSACION_CONECTIVIDAD_MODULOS_MAX = 60270;
+    // - Cargos: valor base por cada cargo.
+    // - Módulos: cálculo proporcional según el nivel.
+    // - IMPORTANTE: el total de conectividad de toda la liquidación nunca puede
+    //   superar el tope global, aunque haya dos o más cargos.
+    const COMPENSACION_CONECTIVIDAD_POR_CARGO = 30135;
+    const COMPENSACION_CONECTIVIDAD_MAX_GLOBAL = 60270;
     const topesModulosConectividad = {
       'Inicial': 30,
       'Primaria': 24,
@@ -615,16 +617,32 @@
       return null;
     }
 
-    function calcularCompensacionConectividad(cargo, modulos) {
-      if (!cargo.includes('Módulos')) return COMPENSACION_CONECTIVIDAD_CARGO;
+    // Devuelve lo que correspondería por ese cargo antes de aplicar el tope global.
+    function calcularCompensacionConectividadBase(cargo, modulos) {
+      if (!cargo.includes('Módulos')) {
+        return COMPENSACION_CONECTIVIDAD_POR_CARGO;
+      }
 
       const topeNivel = getTopeModulosConectividad(cargo);
       const cantidadModulos = Math.max(0, Number(modulos) || 0);
 
       if (!topeNivel) return 0;
 
-      const proporcional = COMPENSACION_CONECTIVIDAD_MODULOS_MAX * (cantidadModulos / topeNivel);
-      return Math.min(COMPENSACION_CONECTIVIDAD_MODULOS_MAX, proporcional);
+      const proporcional = COMPENSACION_CONECTIVIDAD_MAX_GLOBAL * (cantidadModulos / topeNivel);
+      return Math.min(COMPENSACION_CONECTIVIDAD_MAX_GLOBAL, proporcional);
+    }
+
+    // Aplica el tope global usando únicamente el saldo todavía disponible.
+    function aplicarTopeGlobalConectividad(compensacionCalculada, totalYaAplicado) {
+      const saldoDisponible = Math.max(
+        0,
+        COMPENSACION_CONECTIVIDAD_MAX_GLOBAL - totalYaAplicado
+      );
+
+      return Math.min(
+        Math.max(0, Number(compensacionCalculada) || 0),
+        saldoDisponible
+      );
     }
 
     fetch(url)
@@ -761,6 +779,8 @@
       const maxAdicional455 = 278458;
       const maxAdicional667 = 291683.45;
       let totalConectividad = 0;
+      let totalConectividadSinTope = 0;
+      let conectividadFueTopada = false;
 
       for (let i = 0; i < count; i++) {
         const cargo = document.getElementById('cargo' + i).value;
@@ -872,10 +892,28 @@
           detalle += `<li>Antigüedad (${antig} años): ${money(adicionalAntig)}</li>`;
         }
 
-        const compensacionConectividad = calcularCompensacionConectividad(cargo, modulos);
-        subtotal += compensacionConectividad;
-        totalConectividad += compensacionConectividad;
-        detalle += `<li><strong>Compensación por conectividad:</strong> ${money(compensacionConectividad)}</li>`;
+        const compensacionConectividadCalculada = calcularCompensacionConectividadBase(cargo, modulos);
+        const compensacionConectividadAplicada = aplicarTopeGlobalConectividad(
+          compensacionConectividadCalculada,
+          totalConectividad
+        );
+
+        totalConectividadSinTope += compensacionConectividadCalculada;
+        totalConectividad += compensacionConectividadAplicada;
+        subtotal += compensacionConectividadAplicada;
+
+        detalle += `<li><strong>Compensación por conectividad aplicada:</strong> ${money(compensacionConectividadAplicada)}</li>`;
+
+        if (compensacionConectividadAplicada < compensacionConectividadCalculada) {
+          conectividadFueTopada = true;
+          detalle += `
+            <li class="warning">
+              Se aplicó el tope global de conectividad. Para este cargo se habían calculado
+              ${money(compensacionConectividadCalculada)}, pero solo quedaban disponibles
+              ${money(compensacionConectividadAplicada)}.
+            </li>
+          `;
+        }
 
         breakdownHTML += detalle;
         total += subtotal;
@@ -894,7 +932,14 @@
         </ul>
         <h3>Resumen de compensación por conectividad</h3>
         <ul>
-          <li>Total Compensación por conectividad: ${money(totalConectividad)}</li>
+          <li>
+            Total Compensación por conectividad aplicada:
+            ${money(totalConectividad)} / ${money(COMPENSACION_CONECTIVIDAD_MAX_GLOBAL)}
+          </li>
+          ${conectividadFueTopada ? `
+            <li>Total calculado antes del tope: ${money(totalConectividadSinTope)}</li>
+            <li class="warning">Se aplicó el tope máximo global de conectividad.</li>
+          ` : ''}
         </ul>
         <h3>Descuentos</h3>
         <ul>
