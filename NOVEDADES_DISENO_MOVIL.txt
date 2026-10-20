@@ -1,0 +1,45 @@
+DOCENTES BROWN — CALCULADORA SALARIAL RESPONSIVE
+================================================
+
+CAMBIOS DE DISEÑO
+- Nueva interfaz mobile-first, con tarjetas más limpias y controles táctiles grandes.
+- Selector de mes arriba de todo. Cada período conserva sus datos por separado.
+- Antigüedad docente en un solo lugar.
+- Un cargo inicial y botón «Agregar otro cargo» (hasta 12); se puede quitar cada cargo adicional.
+- El campo «Cantidad de módulos» aparece solo para cargos por módulos.
+- Botón «Calcular mi sueldo» fijo en la parte inferior en celulares.
+- Salario de bolsillo destacado; salario total separado.
+- Desglose plegable: disponible, pero no ocupa toda la pantalla inicialmente.
+- Botón de PDF visible solo luego de calcular.
+- Compartir desde el encabezado. Mantiene el contador de visitas.
+- Sin comparador mensual ni enlace público al administrador.
+
+LO QUE NO CAMBIA
+- Fórmulas salariales, estructura de 78 conceptos y administración por períodos.
+- Uso de salarios.json y salary-schema.js existentes.
+- Almacenamiento local por mes (misma clave que la edición anterior).
+- Ruta del administrador: /ADMIN, sin acceso visible desde la calculadora.
+- Recibo en PDF (requiere internet para cargar sus librerías).
+
+ACTUALIZAR UNA CALCULADORA YA INSTALADA (RECOMENDADO)
+1. Hacé un respaldo de tu repositorio y de salarios.json antes de modificar archivos.
+2. Descargá el ZIP «Actualización segura», que trae index.html y app.js.
+3. Subí ambos archivos a la RAÍZ de tu sitio GitHub Pages; reemplazá index.html y agregá app.js.
+4. NO sobreescribas salarios.json ni salary-schema.js, ni la carpeta ADMIN.
+5. Verificá que al abrir el sitio se vean los meses que ya publicaste.
+6. Probá el sitio desde el celular. Si ves la pantalla antigua, forzá recarga.
+
+INSTALACIÓN NUEVA
+Usá el ZIP «Proyecto completo». Incluye el administrador y las dependencias,
+pero salarios.json INICIALMENTE ESTÁ VACÍO. No lo uses para reemplazar las
+escalas ya publicadas en tu sitio. Primero publicá un período desde /ADMIN.
+
+PRIVACIDAD
+La antigüedad, cargos, módulos y cálculos del docente se guardan por mes
+únicamente en el navegador. No se comparten con el administrador ni se
+sincronizan entre dispositivos. Si se borran los datos del sitio, se pierden.
+
+ALCANCE
+Se ha rediseñado la presentación y la interacción, conservando la matemática
+salarial previa. Los conceptos son estimativos y no representan una liquidación
+oficial. La ausencia de meses publicados bloquea el cálculo deliberadamente.
