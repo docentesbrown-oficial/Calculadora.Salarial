@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Administración salarial | Docentes Brown</title>
+<meta name="robots" content="noindex,nofollow" />
+<style>
+:root{--navy:#24496e;--purple:#4d3069;--blue:#3d8fb0;--cream:#f3efdc;--red:#da6863;--line:#d8e0e7;--ok:#206b55}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--navy);font:16px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif}header{background:var(--purple);color:#fff;padding:22px max(18px,calc((100vw - 1150px)/2));display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}header h1{font-size:1.38rem;margin:0}header a{color:#fff;text-decoration:none;border-bottom:1px solid #ffffff88}main{max-width:1150px;margin:22px auto;padding:0 16px 42px}.intro{color:#536476;margin-bottom:14px}.layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}@media(max-width:840px){.layout{grid-template-columns:1fr}}.panel{background:#fff;border:1px solid #d6e4eb;border-radius:16px;box-shadow:0 8px 24px #1d385014;padding:20px;margin-bottom:16px}.panel h2{font-size:1.12rem;margin:0 0 12px;color:var(--purple)}.panel h3{font-size:1rem;margin:18px 0 8px}p{margin:.45rem 0 1rem}small,.muted{font-size:.86rem;color:#617084}.field{margin-bottom:13px}.field label{display:block;font-weight:750;margin-bottom:5px;font-size:.89rem}input,select{font:inherit;width:100%;color:var(--navy);padding:11px 12px;border:1px solid #a9bdc9;border-radius:10px;background:#fff;min-width:0}input:focus,select:focus{outline:3px solid #3d8fb04d;border-color:var(--blue)}.btn{border:0;background:var(--purple);color:#fff;font-weight:750;font-size:.93rem;border-radius:11px;padding:11px 14px;cursor:pointer}.btn:hover{filter:brightness(1.12)}.btn:disabled{opacity:.45;cursor:not-allowed}.btn.subtle{background:var(--blue)}.btn.neutral{background:#eef3f7;color:var(--navy);border:1px solid #c1d3e0}.btn.danger{background:#a43c3d}.btnrow{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}.btnrow .btn{flex:1 1 auto}.notice{font-size:.87rem;border:1px solid #b0c8d3;background:#eef8fc;padding:12px;border-radius:10px}.notice strong{color:var(--purple)}.notice.warn{background:#fff6e7;border-color:#eccb86}.notice.error{background:#fff2f1;border-color:#eaa4a1;color:#a33230}.notice.good{background:#eaf6ef;border-color:#88bda3;color:#185c40}.tiny{font-size:.79rem;line-height:1.4}.editorbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.editorbar h2{margin:0}.editor-section{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:#f9fbfc;overflow:hidden}.editor-section summary{padding:13px 16px;cursor:pointer;background:#eef3f8;color:var(--navy);font-weight:800;list-style-position:inside}.editor-section .section-body{padding:15px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.editor-section .field{margin:0}.editor-section .field input{font-variant-numeric:tabular-nums;padding:9px 10px}.editor-section .field .unit{font-size:.78rem;color:#728494}.sticky-bottom{position:sticky;bottom:9px;z-index:2;background:#ffffffeb;backdrop-filter:blur(12px);padding:12px;border:1px solid #dce8ed;border-radius:12px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}.sticky-bottom .btn{white-space:nowrap}.tag{display:inline-block;font-size:.76rem;padding:4px 9px;border-radius:999px;background:#eaf5ee;color:#22724d;font-weight:800}.tag.draft{background:#fff1db;color:#916018}.top-status{margin-top:10px}input[type=file]{padding:7px} .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:470px){.split{grid-template-columns:1fr}} .checkrow{display:flex;align-items:center;gap:10px;padding:13px 0}.checkrow input{width:auto;accent-color:var(--purple);transform:scale(1.2)}.checkrow label{font-weight:800}.footer{font-size:.82rem;color:#7d8690;margin:24px 0}
+</style>
+</head>
+<body>
+<header><div><h1>DOCENTES BROWN · Administración salarial</h1><div style="opacity:.8;font-size:.86rem">Configuración mensual de conceptos y escalas</div></div><a href="index.html">← Volver a la calculadora</a></header>
+<main>
+<p class="intro">Administrá los conceptos salariales de cada mes. Los cambios afectan a quienes usan la calculadora <strong>únicamente después de publicarlos en el repositorio</strong>.</p>
+<div class="layout">
+<aside>
+  <section class="panel">
+    <h2>1. Mes de cobro</h2>
+    <div class="field"><label for="periodSelect">Período que querés editar</label><select id="periodSelect"><option value="">Todavía no hay meses</option></select></div>
+    <div id="monthInfo" class="notice">Creá el primer mes para comenzar.</div>
+    <h3>Crear un nuevo mes</h3>
+    <div class="field"><label for="newMonth">Mes</label><input type="month" id="newMonth" /></div>
+    <div class="field"><label for="cloneSelect">Copiar valores desde</label><select id="cloneSelect"><option value="">Valores originales del código (sin básico)</option></select><div class="muted tiny">Duplicar un mes facilita actualizar solo los importes que cambiaron.</div></div>
+    <button class="btn subtle" id="addMonthBtn" style="width:100%">+ Crear mes en borrador</button>
+    <div class="btnrow"><button class="btn neutral" id="deleteMonthBtn">Eliminar mes</button></div>
+  </section>
+  <section class="panel">
+    <h2>2. Publicación en GitHub</h2>
+    <p class="muted">El repositorio se modifica solo si iniciás sesión con un token con permiso <strong>Contents: Read and write</strong>. No se incluye ninguna clave en la calculadora pública.</p>
+    <div class="split"><div class="field"><label for="ghOwner">Usuario/organización</label><input id="ghOwner" autocomplete="off" placeholder="tu-organizacion" /></div><div class="field"><label for="ghRepo">Repositorio</label><input id="ghRepo" autocomplete="off" placeholder="nombre-repo" /></div></div>
+    <div class="field"><label for="ghBranch">Rama publicada</label><input id="ghBranch" value="main" spellcheck="false" /></div>
+    <div class="field"><label for="ghToken">Token personal de GitHub</label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…" /><div class="muted tiny">No se guarda en el navegador. Usá un token específico para este repositorio.</div></div>
+    <button class="btn neutral" id="loadGithubBtn" style="width:100%">Conectar y leer GitHub</button>
+    <div id="githubStatus" class="notice top-status">Sin conexión con GitHub.</div>
+    <div class="btnrow"><button class="btn" id="publishBtn" disabled>Publicar todos los cambios</button></div>
+    <div class="muted tiny" style="margin-top:8px">El archivo actualizado es <code>salarios.json</code> y debe estar en la misma carpeta que <code>index.html</code>.</div>
+  </section>
+  <section class="panel">
+    <h2>Respaldo sin conexión</h2>
+    <p class="muted">Podés descargar o importar el archivo para editarlo manualmente. Los cambios no serán visibles para el público hasta subirlo al sitio.</p>
+    <button class="btn neutral" id="downloadBtn" style="width:100%">Descargar salarios.json</button>
+    <div class="field" style="margin-top:13px"><label for="importFile">Importar salarios.json</label><input id="importFile" type="file" accept=".json,application/json" /></div>
+  </section>
+</aside>
+<div>
+  <section class="panel" id="editorPanel">
+    <div class="editorbar"><h2>3. Composición salarial</h2><span id="periodTag" class="tag draft">Sin período</span></div>
+    <div id="emptyEditor" class="notice warn">Seleccioná o creá un mes para editar los importes. El primer mes se crea con los valores numéricos existentes en el código original, sin atribuirlos a un período real. Cargá el básico correspondiente antes de publicarlo.</div>
+    <div id="editorForm" hidden>
+      <div class="checkrow"><input type="checkbox" id="isPublished" /><label for="isPublished">Este mes está publicado para los docentes</label></div>
+      <div id="editorFields"></div>
+      <div class="sticky-bottom"><span class="muted" id="editStatus" role="status">Los cambios se conservan temporalmente en este navegador.</span><button class="btn" id="saveDraftBtn">Guardar borrador local</button></div>
+    </div>
+  </section>
+  <div id="message" class="notice" role="status">Podés empezar creando un mes. No se modifica ningún salario público hasta publicarlo.</div>
+</div>
+</div>
+<div class="footer">Docentes Brown · Panel de edición de escalas salariales. La autenticación y los permisos de publicación dependen de GitHub, no de una contraseña escrita en el HTML.</div>
+</main>
+<script src="salary-schema.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const S=SalarySchema;
+const DRAFT_KEY='docentesbrown.salarios.adminBorrador.v1';
+const CONFIG_KEY='docentesbrown.salarios.ghConfig.v1';
+let data={schemaVersion:1,updatedAt:null,periodos:{}};
+let currentMonth='';
+let remoteSha=null;
+let remoteLoaded=false;
+let dirty=false;
+
+function tell(message, kind=''){
+  $('message').className='notice'+(kind?' '+kind:'');
+  $('message').textContent=message;
+}
+function statusGH(msg,kind=''){$('githubStatus').textContent=msg;$('githubStatus').className='notice top-status'+(kind?' '+kind:'');}
+function setDirty(value=true){
+  dirty=value;
+  $('editStatus').textContent=value?'Cambios locales pendientes de publicar.':'Datos guardados; sin cambios pendientes.';
+  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(data));}catch(e){tell('No se pudo guardar el borrador en este navegador. Descargá un respaldo.','error');}
+}
+function fieldVal(field,value){if(value===null||value===undefined)return '';return field.kind==='percent'?String(Number((value*100).toFixed(9))):String(value);}
+function syncSelectors(selected=currentMonth){
+  const keys=Object.keys(data.periodos).sort().reverse();
+  for (const id of ['periodSelect','cloneSelect']){
+    const el=$(id);el.innerHTML='';
+    if(id==='cloneSelect')el.appendChild(new Option('Valores originales del código (sin básico)',''));
+    else if(!keys.length)el.appendChild(new Option('Todavía no hay meses',''));
+    for(const key of keys)el.appendChild(new Option(S.periodLabel(key)+(data.periodos[key].estado==='publicado'?' · Publicado':' · Borrador'),key));
+  }
+  currentMonth=keys.includes(selected)?selected:(keys[0]||'');
+  $('periodSelect').value=currentMonth;
+  $('cloneSelect').value=currentMonth || '';
+  renderEditor();
+}
+function renderEditor(){
+  const p=data.periodos[currentMonth];
+  $('emptyEditor').hidden=!!p;
+  $('editorForm').hidden=!p;
+  $('deleteMonthBtn').disabled=!p;
+  if(!p){$('monthInfo').textContent='Creá el primer mes para comenzar.';$('periodTag').textContent='Sin período';$('periodTag').className='tag draft';return;}
+  $('monthInfo').textContent=S.periodLabel(currentMonth)+' · '+(p.estado==='publicado'?'Publicado para los docentes':'Borrador (todavía no visible)');
+  $('periodTag').textContent=p.estado==='publicado'?'Publicado':'Borrador';
+  $('periodTag').className='tag'+(p.estado==='publicado'?'':' draft');
+  $('isPublished').checked=p.estado==='publicado';
+  const grouped=new Map();
+  for(const f of S.FIELDS){if(!grouped.has(f.group))grouped.set(f.group,[]);grouped.get(f.group).push(f);}
+  const wrap=$('editorFields');wrap.innerHTML='';
+  let groupIndex=0;
+  for(const [group,fields] of grouped){
+    const details=document.createElement('details');details.className='editor-section';details.open=groupIndex++<2;
+    const summary=document.createElement('summary');summary.textContent=group+' ('+fields.length+')';details.appendChild(summary);
+    const grid=document.createElement('div');grid.className='section-body';
+    for(const field of fields){
+      const cell=document.createElement('div');cell.className='field';
+      const label=document.createElement('label');
+      const id='adminfield-'+S.FIELDS.indexOf(field);label.htmlFor=id;label.textContent=field.label;
+      const input=document.createElement('input');input.id=id;input.dataset.path=field.path;
+      input.type='number';input.min='0';input.step=field.kind==='integer'?'1':'any';
+      input.value=fieldVal(field,S.readPath(p,field.path));
+      const note=document.createElement('div');note.className='unit';note.textContent=field.help || (field.kind==='percent'?'Porcentaje (%)':field.kind==='money'?'Pesos argentinos (ARS)':field.kind==='integer'?'Cantidad de módulos':'Coeficiente');
+      cell.append(label,input,note);grid.append(cell);
+    }
+    details.append(grid);wrap.append(details);
+  }
+}
+async function loadLocal(){
+  try{
+    const r=await fetch('salarios.json?admin='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw Error('No disponible');
+    const db=await r.json();
+    if(db.schemaVersion===1&&db.periodos)data=db;
+  }catch(e){tell('Trabajando sin conexión al archivo público. Podés cargarlo desde GitHub o importar un respaldo.','warn');}
+  try{
+    const local=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
+    if(local?.schemaVersion===1&&local.periodos){
+      data=local;dirty=true;tell('Se recuperó tu borrador local. Revisá los datos y publicalos cuando estén listos.','warn');
+    }
+  }catch(e){}
+  try{
+    const config=JSON.parse(localStorage.getItem(CONFIG_KEY)||'null');
+    if(config){$('ghOwner').value=config.owner||'';$('ghRepo').value=config.repo||'';$('ghBranch').value=config.branch||'main';}
+  }catch(e){}
+  syncSelectors();
+}
+$('periodSelect').addEventListener('change',e=>{currentMonth=e.target.value;renderEditor();});
+$('addMonthBtn').addEventListener('click',()=>{
+  const month=$('newMonth').value;
+  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)){tell('Seleccioná un mes válido.','error');return;}
+  if(data.periodos[month]){currentMonth=month;syncSelectors(month);tell('Ese mes ya existe. Seleccionalo para editarlo.','warn');return;}
+  const original=$('cloneSelect').value;
+  const p=original&&data.periodos[original]?S.deepCopy(data.periodos[original]):S.deepCopy(S.DEFAULT_PERIOD);
+  p.estado='borrador';
+  data.periodos[month]=p;
+  setDirty();syncSelectors(month);
+  tell('Creaste '+S.periodLabel(month)+' en borrador. Revisá cada concepto y el básico antes de publicarlo.','good');
+});
+$('deleteMonthBtn').addEventListener('click',()=>{
+  if(!currentMonth)return;
+  if(!confirm('¿Eliminar '+S.periodLabel(currentMonth)+'? Si lo publicás luego, ese mes desaparecerá de la calculadora.'))return;
+  delete data.periodos[currentMonth];setDirty();syncSelectors('');tell('Mes eliminado de tu edición local. Publicá los cambios para actualizarlos en el sitio.','warn');
+});
+$('editorFields').addEventListener('input',e=>{
+  const fieldPath=e.target.dataset.path;
+  if(!fieldPath||!currentMonth)return;
+  const field=S.FIELDS.find(f=>f.path===fieldPath);
+  const raw=e.target.value;
+  let value=raw.trim()===''?null:Number(raw);
+  if(value!==null&&field.kind==='percent')value=value/100;
+  S.writePath(data.periodos[currentMonth],fieldPath,value);
+  setDirty();
+});
+$('isPublished').addEventListener('change',e=>{
+  const p=data.periodos[currentMonth];if(!p)return;
+  p.estado=e.target.checked?'publicado':'borrador';
+  if(p.estado==='publicado'){
+    const invalid=S.validate(p);
+    if(invalid){p.estado='borrador';e.target.checked=false;tell('No se puede publicar: '+invalid,'error');return;}
+  }
+  setDirty();$('periodTag').textContent=p.estado==='publicado'?'Publicado':'Borrador';$('periodTag').className='tag'+(p.estado==='publicado'?'':' draft');
+  $('monthInfo').textContent=S.periodLabel(currentMonth)+' · '+(p.estado==='publicado'?'Publicado para los docentes':'Borrador (todavía no visible)');
+  tell('Estado actualizado en la edición local. Todavía debés publicar el archivo en GitHub.','warn');
+});
+$('saveDraftBtn').addEventListener('click',()=>{setDirty();tell('Guardaste el borrador en este navegador. Podés descargar una copia como respaldo.','good');});
+function validDB(){
+  for(const [m,p] of Object.entries(data.periodos)){
+    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(m))throw Error('Período no válido: '+m);
+    const error=S.validate(p);if(error)throw Error(S.periodLabel(m)+': '+error);
+  }
+}
+function makePayload(){
+  validDB();
+  const copy=S.deepCopy(data);
+  copy.schemaVersion=1;copy.updatedAt=new Date().toISOString();
+  return copy;
+}
+$('downloadBtn').addEventListener('click',()=>{
+  try{
+    const payload=makePayload();
+    const blob=new Blob([JSON.stringify(payload,null,2)+'\n'],{type:'application/json;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='salarios.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    tell('Se descargó el respaldo salarios.json. Para hacerlo público subilo al mismo directorio que index.html.','good');
+  }catch(e){tell(e.message,'error');}
+});
+$('importFile').addEventListener('change',async e=>{
+  const f=e.target.files?.[0];if(!f)return;
+  try{
+    const imported=JSON.parse(await f.text());
+    if(imported.schemaVersion!==1||!imported.periodos||Array.isArray(imported.periodos))throw Error('Archivo incompatible.');
+    const prior=data;data=imported;
+    try{validDB();}catch(err){data=prior;throw err;}
+    setDirty();syncSelectors();tell(remoteLoaded
+      ? 'Archivo importado. Ya tenés conexión autorizada: revisá los meses y publicá los cambios.'
+      : 'Archivo importado. Para publicar, conectate y leé el repositorio.','good');
+  }catch(err){tell('No se pudo importar el archivo: '+err.message,'error');}
+  e.target.value='';
+});
+function githubConfig(){
+  const owner=$('ghOwner').value.trim();const repo=$('ghRepo').value.trim();const branch=$('ghBranch').value.trim();
+  if(!/^[\w.-]+$/.test(owner)||!/^[\w.-]+$/.test(repo)||!/^[\w./-]+$/.test(branch))throw Error('Revisá usuario, repositorio y rama de GitHub.');
+  const token=$('ghToken').value.trim();
+  if(!token)throw Error('Ingresá un token de GitHub con permisos para editar el repositorio.');
+  try{localStorage.setItem(CONFIG_KEY,JSON.stringify({owner,repo,branch}));}catch(e){}
+  return {owner,repo,branch,token};
+}
+async function githubRequest(config,method='GET',body=null){
+  const url=`https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/salarios.json`+(method==='GET'?`?ref=${encodeURIComponent(config.branch)}`:'');
+  const resp=await fetch(url,{method,headers:{'Authorization':'Bearer '+config.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+  let result={};try{result=await resp.json();}catch(e){}
+  if(!resp.ok)throw Error('GitHub respondió '+resp.status+': '+(result.message||'Revisá permisos, rama o conexión.'));
+  return result;
+}
+function base64utf8(s){
+  const bytes=new TextEncoder().encode(s);let binary='';
+  for(let i=0;i<bytes.length;i+=4096)binary+=String.fromCharCode(...bytes.subarray(i,i+4096));
+  return btoa(binary);
+}
+function parseGithubContent(item){
+  if(item.type!=='file'||!item.content)throw Error('El archivo no tiene contenido válido.');
+  const bin=atob(item.content.replace(/\s/g,''));const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+$('loadGithubBtn').addEventListener('click',async()=>{
+  const btn=$('loadGithubBtn');btn.disabled=true;
+  try{
+    const config=githubConfig();
+    if(dirty&&!confirm('Hay datos de edición local. ¿Reemplazarlos por la versión actual de GitHub? (Podés descargarlos antes.)'))return;
+    statusGH('Conectando con GitHub…');
+    const item=await githubRequest(config);
+    const incoming=parseGithubContent(item);
+    if(incoming.schemaVersion!==1||!incoming.periodos)throw Error('El repositorio tiene un salarios.json incompatible.');
+    data=incoming;validDB();remoteSha=item.sha;remoteLoaded=true;dirty=false;
+    try{localStorage.removeItem(DRAFT_KEY);}catch(e){}
+    syncSelectors();$('publishBtn').disabled=false;
+    statusGH('Conexión autorizada. Archivo actual leído de la rama '+config.branch+'.','good');
+    tell('Los meses de GitHub están listos para editar. Solo vos podés publicar usando los permisos de tu token.','good');
+  }catch(e){remoteLoaded=false;remoteSha=null;$('publishBtn').disabled=true;statusGH(e.message,'error');}
+  finally{btn.disabled=false;}
+});
+$('publishBtn').addEventListener('click',async()=>{
+  const btn=$('publishBtn');btn.disabled=true;
+  try{
+    const config=githubConfig();if(!remoteLoaded||!remoteSha)throw Error('Primero conectate y leé GitHub para verificar el archivo actual.');
+    const payload=makePayload();
+    const latest=await githubRequest(config);
+    if(latest.sha!==remoteSha)throw Error('Otra persona cambió salarios.json desde que lo abriste. Descargá tu borrador y volvé a leer GitHub para conciliar las diferencias.');
+    statusGH('Guardando nueva escala en GitHub…');
+    const result=await githubRequest(config,'PUT',{
+      message:'Docentes Brown: actualizar escalas salariales mensuales',
+      content:base64utf8(JSON.stringify(payload,null,2)+'\n'),
+      sha:remoteSha,
+      branch:config.branch
+    });
+    remoteSha=result.content?.sha||null;
+    data=payload;remoteLoaded=!!remoteSha;dirty=false;
+    try{localStorage.removeItem(DRAFT_KEY);}catch(e){}
+    syncSelectors();
+    statusGH('¡Cambios enviados a GitHub! La publicación de GitHub Pages puede tardar unos minutos.','good');
+    tell('La nueva información salarial quedó guardada en el repositorio. Los docentes verán los meses publicados cuando el sitio actualice.','good');
+  }catch(e){statusGH(e.message,'error');tell('La publicación no se completó: '+e.message,'error');}
+  finally{btn.disabled=!remoteLoaded;}
+});
+loadLocal();
+})();
+</script>
+</body>
+</html>

@@ -366,6 +366,7 @@
       user-select:none;
     }
     .btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+    .btn:disabled{opacity:.48;cursor:not-allowed;}
     .btn.primary{
       background: var(--morado);
       color: #fff;
@@ -455,10 +456,11 @@
             <div class="field">
               <label for="monthSelect">
                 Mes
-                <span class="hint" id="monthHelp">Se carga desde la planilla</span>
+                <span class="hint" id="monthHelp">Se carga desde el archivo salarial publicado por Docentes Brown</span>
               </label>
               <div id="monthLoading" class="skeleton" aria-hidden="true"></div>
               <select id="monthSelect" style="display:none" aria-describedby="monthHelp"></select>
+              <div class="hint" id="monthSaveStatus" role="status">Tus datos se guardan en este navegador, por mes.</div>
             </div>
 
             <div class="field">
@@ -512,6 +514,7 @@
               <div id="visit-counter">Cargando contador de visitas…</div>
               <div class="muted" style="margin-top:6px">
                 Este cálculo es orientativo y no reemplaza el recibo oficial.
+                <div style="margin-top:7px"><a href="admin.html" style="color:var(--morado)">Administración salarial</a></div>
               </div>
             </div>
           </div>
@@ -531,14 +534,16 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <script src="salary-schema.js"></script>
   <script>
-    // ======== Lógica original (sin cambiar cálculos). Solo UI/estructura mejorada. ========
-
-    const sheetId = '1UVE9egJbF5SnN14h1s7qJPyvYAKcy8rynyOAfNO3jWo';
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
-
-    const basicMap = {};
-    let cargosList = new Set();
+    // Configuración mensual pública. Sin planillas ni claves en el navegador del docente.
+    const { DEFAULT_PERIOD, periodLabel } = SalarySchema;
+    let periodos = {};
+    let activeMonth = null;
+    let lastCalculatedRates = null;
+    const SAVED_PREFIX = 'docentesbrown.calculadora.mes.v1.';
+    const LAST_MONTH_KEY = 'docentesbrown.calculadora.ultimoMes.v1';
+    let cargosList = new Set(Object.keys(DEFAULT_PERIOD.indicesBasico));
 
     const monthSelect = document.getElementById('monthSelect');
     const basicDisplay = document.getElementById('basicSalaryDisplay');
@@ -569,133 +574,153 @@
       window.__toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
     }
 
-    const antiguedadMap = {
-      0: 0.21, 1: 0.21, 2: 0.24, 3: 0.24, 4: 0.33, 5: 0.33, 6: 0.33,
-      7: 0.43, 8: 0.43, 9: 0.43, 10: 0.54, 11: 0.54, 12: 0.64, 13: 0.64,
-      14: 0.64, 15: 0.74, 16: 0.74, 17: 0.84, 18: 0.84, 19: 0.84,
-      20: 1.05, 21: 1.05, 22: 1.15, 23: 1.15, "mas de 24": 1.24
-    };
+    function porcentajeAntiguedad(sueldoMes, antiguedad){
+      const years = Number(antiguedad);
+      const key = Number.isFinite(years) && years >= 24 ? 'mas de 24' : String(antiguedad);
+      return sueldoMes.antiguedad[key] || 0;
+    }
 
-    const desfavMap = { 0: 0, 1: 0.30, 2: 0.60, 3: 0.90, 4: 1.00, 5: 1.20 };
-
-    const indicesBasico = {
-      'Maestro de Grado': 1.1,
-      'Maestro de Inicial': 1.1,
-      'Preceptor (Inicial)': 1,
-      'Preceptor (Sec/Sup)': 1,
-      'Profesor Módulos Secundaria': 0.1,
-      'Profesor Módulos Inicial': 0.06666666667,
-      'Profesor Módulos Primaria': 0.08333333333,
-      'Profesor Módulos Superior': 0.125,
-      'Bibliotecario Inicial & Primaria': 1.1,
-      'Bibliotecario Secundaria & Superior': 1.2,
-      'EMATP': 1.2,
-      'Maestro Especial': 1.1,
-      'Equipo de Orientación': 1.1
-    };
-
-
-    // Compensación por conectividad
-    // - Cargos: valor base por cada cargo.
-    // - Módulos: cálculo proporcional según el nivel.
-    // - IMPORTANTE: el total de conectividad de toda la liquidación nunca puede
-    //   superar el tope global, aunque haya dos o más cargos.
-    const COMPENSACION_CONECTIVIDAD_POR_CARGO = 30135;
-    const COMPENSACION_CONECTIVIDAD_MAX_GLOBAL = 60270;
-    const topesModulosConectividad = {
-      'Inicial': 30,
-      'Primaria': 24,
-      'Secundaria': 20,
-      'Superior': 16
-    };
-
-    function getTopeModulosConectividad(cargo) {
-      if (cargo.includes('Inicial')) return topesModulosConectividad.Inicial;
-      if (cargo.includes('Primaria')) return topesModulosConectividad.Primaria;
-      if (cargo.includes('Secundaria')) return topesModulosConectividad.Secundaria;
-      if (cargo.includes('Superior')) return topesModulosConectividad.Superior;
+    function getTopeModulosConectividad(cargo, sueldoMes) {
+      if (cargo.includes('Inicial')) return sueldoMes.topeModulosConectividad.Inicial;
+      if (cargo.includes('Primaria')) return sueldoMes.topeModulosConectividad.Primaria;
+      if (cargo.includes('Secundaria')) return sueldoMes.topeModulosConectividad.Secundaria;
+      if (cargo.includes('Superior')) return sueldoMes.topeModulosConectividad.Superior;
       return null;
     }
 
-    // Devuelve lo que correspondería por ese cargo antes de aplicar el tope global.
-    function calcularCompensacionConectividadBase(cargo, modulos) {
-      if (!cargo.includes('Módulos')) {
-        return COMPENSACION_CONECTIVIDAD_POR_CARGO;
-      }
-
-      const topeNivel = getTopeModulosConectividad(cargo);
+    function calcularCompensacionConectividadBase(cargo, modulos, sueldoMes) {
+      if (!cargo.includes('Módulos')) return sueldoMes.compensacionConectividadPorCargo;
+      const topeNivel = getTopeModulosConectividad(cargo, sueldoMes);
       const cantidadModulos = Math.max(0, Number(modulos) || 0);
-
       if (!topeNivel) return 0;
-
-      const proporcional = COMPENSACION_CONECTIVIDAD_MAX_GLOBAL * (cantidadModulos / topeNivel);
-      return Math.min(COMPENSACION_CONECTIVIDAD_MAX_GLOBAL, proporcional);
+      const proporcional = sueldoMes.compensacionConectividadMaxGlobal * (cantidadModulos / topeNivel);
+      return Math.min(sueldoMes.compensacionConectividadMaxGlobal, proporcional);
     }
 
-    // Aplica el tope global usando únicamente el saldo todavía disponible.
-    function aplicarTopeGlobalConectividad(compensacionCalculada, totalYaAplicado) {
-      const saldoDisponible = Math.max(
-        0,
-        COMPENSACION_CONECTIVIDAD_MAX_GLOBAL - totalYaAplicado
-      );
-
-      return Math.min(
-        Math.max(0, Number(compensacionCalculada) || 0),
-        saldoDisponible
-      );
+    function aplicarTopeGlobalConectividad(compensacionCalculada, totalYaAplicado, sueldoMes) {
+      const saldoDisponible = Math.max(0, sueldoMes.compensacionConectividadMaxGlobal - totalYaAplicado);
+      return Math.min(Math.max(0, Number(compensacionCalculada) || 0), saldoDisponible);
     }
 
-    fetch(url)
-      .then(response => response.text())
-      .then(data => {
-        const jsonText = data.substring(47).slice(0, -2);
-        const jsonData = JSON.parse(jsonText);
-        const rows = jsonData.table.rows;
+    function captureCargos(){
+      return Array.from(cardsContainer.querySelectorAll('.cargo-card'), (_,i) => ({
+        cargo: document.getElementById('cargo'+i)?.value || '',
+        desf: document.getElementById('desf'+i)?.value || '0',
+        modulos: document.getElementById('modulos'+i)?.value || ''
+      }));
+    }
 
-        rows.forEach(row => {
-          const cells = row.c;
-          if (cells[0] && cells[0].v) {
-            const mes = String(cells[0].v).trim();
-            const basico = (cells[1] && cells[1].v !== null && cells[1].v !== undefined) ? Number(cells[1].v) : null;
+    function saveActiveMonth(){
+      if(!activeMonth)return;
+      const record = {
+        antiguedad: globalAntig.value,
+        positionCount: positionCount.value,
+        cargos: captureCargos(),
+        resultHTML: resultDisplay.innerHTML,
+        breakdownHTML: salaryBreakdown.innerHTML,
+        calculatedRates: lastCalculatedRates
+      };
+      try {
+        localStorage.setItem(SAVED_PREFIX+activeMonth,JSON.stringify(record));
+        localStorage.setItem(LAST_MONTH_KEY,activeMonth);
+        document.getElementById('monthSaveStatus').textContent='✓ Datos de '+periodLabel(activeMonth)+' guardados en este dispositivo.';
+      } catch(e){
+        document.getElementById('monthSaveStatus').textContent='No se pudieron guardar los datos. Revisá el espacio o permisos del navegador.';
+      }
+    }
 
-            if (mes && basico !== null && !Number.isNaN(basico)) {
-              monthSelect.appendChild(new Option(mes, basico));
-              basicMap[mes] = basico;
-            }
-          }
-          if (cells[2] && cells[2].v) cargosList.add(cells[2].v);
-        });
+    function clearResultAfterEdit(){
+      resultDisplay.innerHTML='';
+      salaryBreakdown.innerHTML='';
+      lastCalculatedRates=null;
+      saveActiveMonth();
+    }
 
-        // UI: mostrar select cuando está listo
-        monthLoading.style.display = "none";
-        monthSelect.style.display = "block";
+    function restoreMonth(month){
+      activeMonth=month;
+      let stored=null;
+      try { stored=JSON.parse(localStorage.getItem(SAVED_PREFIX+month)||'null'); }catch(e){}
+      globalAntig.value=stored?.antiguedad ?? '';
+      positionCount.value=stored?.positionCount ?? 1;
+      updateCards(stored?.cargos || []);
+      resultDisplay.innerHTML=stored?.resultHTML || '';
+      salaryBreakdown.innerHTML=stored?.breakdownHTML || '';
+      lastCalculatedRates=stored?.calculatedRates || null;
+      basicDisplay.innerHTML=`<span style="opacity:.8">Básico</span> <strong class="mono">${money(periodos[month].basicoReferencia)}</strong>`;
+      monthBadge.textContent='📅 '+periodLabel(month);
+      try {localStorage.setItem(LAST_MONTH_KEY,month);}catch(e){}
+      const stale=!!(stored?.resultHTML && lastCalculatedRates && lastCalculatedRates!==JSON.stringify(periodos[month]));
+      document.getElementById('monthSaveStatus').textContent=stale
+        ? '⚠ Hay valores salariales actualizados para este mes. El resultado recuperado es el cálculo anterior; tocá Calcular para actualizarlo.'
+        : stored ? '✓ Información recuperada de este mes. Guardada solo en este dispositivo.'
+        : 'Tus datos de este mes se guardarán automáticamente en este dispositivo.';
+    }
 
-        updateCards();
+    function monthChanged(){
+      if(activeMonth)saveActiveMonth();
+      if(monthSelect.value && periodos[monthSelect.value])restoreMonth(monthSelect.value);
+    }
+    monthSelect.addEventListener('change',monthChanged);
 
-        monthSelect.addEventListener('change', () => {
-          const bas = Number(monthSelect.value) || 0;
-          basicDisplay.innerHTML = `<span style="opacity:.8">Básico</span> <strong class="mono">${money(bas)}</strong>`;
-          monthBadge.textContent = "📅 " + (monthSelect.selectedOptions[0]?.textContent || "Mes");
-        });
-
-        if (monthSelect.options.length > 0) {
-          const basInicial = Number(monthSelect.value) || 0;
-          basicDisplay.innerHTML = `<span style="opacity:.8">Básico</span> <strong class="mono">${money(basInicial)}</strong>`;
-          monthBadge.textContent = "📅 " + (monthSelect.selectedOptions[0]?.textContent || "Mes");
+    async function loadSalaryPeriods(){
+      const status=document.getElementById('monthSaveStatus');
+      let db;
+      let fromCache=false;
+      try{
+        const response=await fetch('salarios.json?t='+Date.now(),{cache:'no-store'});
+        if(!response.ok)throw new Error('HTTP '+response.status);
+        db=await response.json();
+        if(db.schemaVersion!==1||!db.periodos||typeof db.periodos!=='object')throw new Error('Archivo de salarios inválido');
+        try{localStorage.setItem('docentesbrown.salarios.cache.v1',JSON.stringify(db));}catch(e){}
+      }catch(err){
+        try{db=JSON.parse(localStorage.getItem('docentesbrown.salarios.cache.v1')||'null');}catch(e){}
+        fromCache=!!db;
+        if(!db){
+          monthLoading.style.display='none';
+          status.textContent='No se pudo cargar la información salarial. Revisá la conexión.';
+          monthBadge.textContent='📅 Sin conexión';
+          calculateBtn.disabled=true;
+          return;
         }
-      })
-      .catch(() => {
-        monthLoading.style.display = "none";
-        monthSelect.style.display = "block";
-        monthSelect.innerHTML = "";
-        monthSelect.appendChild(new Option("No se pudo cargar el mes (revisar conexión)", "0"));
-        basicDisplay.innerHTML = `<span style="opacity:.8">Básico</span> <strong class="mono">${money(0)}</strong>`;
-        monthBadge.textContent = "📅 Mes";
-      });
+      }
+      periodos={};
+      for(const [month,data] of Object.entries(db.periodos)){
+        if(data?.estado==='publicado' && SalarySchema.validate(data)===null && /^\d{4}-(0[1-9]|1[0-2])$/.test(month)){
+          periodos[month]=data;
+        }
+      }
+      monthLoading.style.display='none';
+      monthSelect.innerHTML='';
+      const keys=Object.keys(periodos).sort().reverse();
+      if(!keys.length){
+        monthSelect.style.display='none';
+        monthBadge.textContent='📅 Sin meses publicados';
+        status.textContent='Todavía no hay escalas salariales publicadas. El administrador debe publicar al menos un mes.';
+        calculateBtn.disabled=true;
+        basicDisplay.innerHTML='<span>Básico</span> <strong>—</strong>';
+        updateCards();
+        return;
+      }
+      for(const m of keys) monthSelect.appendChild(new Option(periodLabel(m),m));
+      monthSelect.style.display='block';
+      const previous=(()=>{try{return localStorage.getItem(LAST_MONTH_KEY);}catch(e){return null;}})();
+      monthSelect.value=periodos[previous]?previous:keys[0];
+      calculateBtn.disabled=false;
+      restoreMonth(monthSelect.value);
+      if(fromCache)status.textContent='⚠ Sin conexión: se usan los últimos valores salariales guardados en este navegador.';
+    }
+    loadSalaryPeriods();
 
-    positionCount.addEventListener('input', updateCards);
+    positionCount.addEventListener('input', () => {
+      const currentCargos=captureCargos();
+      updateCards(currentCargos);
+      clearResultAfterEdit();
+    });
+    globalAntig.addEventListener('input',clearResultAfterEdit);
+    cardsContainer.addEventListener('input',clearResultAfterEdit);
+    cardsContainer.addEventListener('change',clearResultAfterEdit);
 
-    function updateCards() {
+    function updateCards(existingCargos = []) {
       cardsContainer.innerHTML = '';
       const count = parseInt(positionCount.value) || 0;
 
@@ -759,25 +784,34 @@
         card.appendChild(grid);
 
         cardsContainer.appendChild(card);
+        if(existingCargos[i]){
+          const saved=existingCargos[i];
+          if(Array.from(selectCargo.options).some(o=>o.value===saved.cargo))selectCargo.value=saved.cargo;
+          selectDesf.value=saved.desf ?? '0';
+          modulosInput.value=saved.modulos ?? '';
+        }
       }
     }
 
     calculateBtn.addEventListener('click', () => {
-      const basico = Number(monthSelect.value) || 0;
+      const salarioMes = periodos[monthSelect.value];
+      if(!salarioMes){toast('Elegí un mes publicado.');return;}
+      const c = salarioMes.conceptos;
+      const basico = Number(salarioMes.basicoReferencia);
       salaryBreakdown.innerHTML = '';
       let total = 0;
       let breakdownHTML = '<h3>Detalle del sueldo</h3><ul>';
 
       const antig = globalAntig.value;
-      const antigPorcentaje = antiguedadMap[antig] || 0;
+      const antigPorcentaje = porcentajeAntiguedad(salarioMes,antig);
 
       const count = parseInt(positionCount.value) || 0;
 
       // Topes globales de módulos (según tu código actual)
       let totalAdicional455 = 0;
       let totalAdicional667 = 0;
-      const maxAdicional455 = 278458;
-      const maxAdicional667 = 291683.45;
+      const maxAdicional455 = salarioMes.maxAdicional455;
+      const maxAdicional667 = salarioMes.maxAdicional667;
       let totalConectividad = 0;
       let totalConectividadSinTope = 0;
       let conectividadFueTopada = false;
@@ -791,65 +825,65 @@
 
         let subtotal = 0;
         let detalle = '';
-        let basicoCargo = basico * (indicesBasico[cargo] || 1);
+        let basicoCargo = basico * (salarioMes.indicesBasico[cargo] || 1);
 
         if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
-          subtotal = basicoCargo + 229915.19 + 139229 + 262500 + 399.56;
+          subtotal = basicoCargo + c.maestro_0641 + c.maestro_0455 + c.maestro_0438 + c.maestro_2761;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0641 Bonificación 1º y 2º ciclo: ${money(229915.19)}</li>
-            <li>0455 Bonificación Docente Agosto 2008: ${money(139229)}</li>
-            <li>0438 Bonificación remunerativa: ${money(262500)}</li>
-            <li>2761 Garantía sin aportes: ${money(399.56)}</li>
+            <li>0641 Bonificación 1º y 2º ciclo: ${money(c.maestro_0641)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: ${money(c.maestro_0455)}</li>
+            <li>0438 Bonificación remunerativa: ${money(c.maestro_0438)}</li>
+            <li>2761 Garantía sin aportes: ${money(c.maestro_2761)}</li>
           `;
         } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
-          subtotal = basicoCargo + 139229 + 145841.72 + 255651.96;
+          subtotal = basicoCargo + c.biblio_0455 + c.biblio_0667 + c.biblio_0451;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0455 Bonificación Docente Agosto 2008: ${money(139229)}</li>
-            <li>0667 Bonificación Hs/Mod. Media: ${money(145841.72)}</li>
-            <li>0451 Suma No Bonificable: ${money(255651.96)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: ${money(c.biblio_0455)}</li>
+            <li>0667 Bonificación Hs/Mod. Media: ${money(c.biblio_0667)}</li>
+            <li>0451 Suma No Bonificable: ${money(c.biblio_0451)}</li>
           `;
         } else if (cargo === 'Maestro Especial') {
-          subtotal = basicoCargo + 267662.46 + 68631.40 + 139229 + 262500;
+          subtotal = basicoCargo + c.especial_0623 + c.especial_0640 + c.especial_0455 + c.especial_0438;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0623 Plus Enseñanza: ${money(267662.46)}</li>
-            <li>0640 Bonificación Función Especial: ${money(68631.40)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
-            <li>0438 Bonificación remunerativa no bonificante: ${money(262500)}</li>
+            <li>0623 Plus Enseñanza: ${money(c.especial_0623)}</li>
+            <li>0640 Bonificación Función Especial: ${money(c.especial_0640)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(c.especial_0455)}</li>
+            <li>0438 Bonificación remunerativa no bonificante: ${money(c.especial_0438)}</li>
           `;
         } else if (cargo === 'Preceptor (Inicial)') {
-          subtotal = basicoCargo + 229915.19 + 139229 + 507.54 + 39.26;
+          subtotal = basicoCargo + c.precepInicial_0623 + c.precepInicial_0455 + c.precepInicial_2761 + c.precepInicial_0648;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0623 Plus Enseñanza: ${money(229915.19)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
-            <li>2761 Garantía Sin aportes: ${money(507.54)}</li>
-            <li>0648 Garantía Con aportes: ${money(39.26)}</li>
+            <li>0623 Plus Enseñanza: ${money(c.precepInicial_0623)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(c.precepInicial_0455)}</li>
+            <li>2761 Garantía Sin aportes: ${money(c.precepInicial_2761)}</li>
+            <li>0648 Garantía Con aportes: ${money(c.precepInicial_0648)}</li>
           `;
         } else if (cargo === 'Preceptor (Sec/Sup)') {
-          subtotal = basicoCargo + 374555.87 + 139229;
+          subtotal = basicoCargo + c.precepSec_0653 + c.precepSec_0455;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0653 Bonificación PR: ${money(374555.87)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
+            <li>0653 Bonificación PR: ${money(c.precepSec_0653)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(c.precepSec_0455)}</li>
           `;
         } else if (cargo === 'Equipo de Orientación') {
-          subtotal = basicoCargo + 262500 + 139229 + 253936.18 + 298.43;
+          subtotal = basicoCargo + c.equipo_0438 + c.equipo_0623 + c.equipo_0455 + c.equipo_2761;
           detalle += `
             <li>0110 Básico: ${money(basicoCargo)}</li>
-            <li>0438 Bonf. Remun. 2014: ${money(262500)}</li>
-            <li>0623 Plus de Enseñanza: ${money(253936.18)}</li>
-            <li>0455 Bonif. Docente agosto 2008: ${money(139229)}</li>
-            <li>2761 Garantía Sin aportes 930: ${money(298.43)}</li>
+            <li>0438 Bonf. Remun. 2014: ${money(c.equipo_0438)}</li>
+            <li>0623 Plus de Enseñanza: ${money(c.equipo_0623)}</li>
+            <li>0455 Bonif. Docente agosto 2008: ${money(c.equipo_0455)}</li>
+            <li>2761 Garantía Sin aportes 930: ${money(c.equipo_2761)}</li>
           `;
         } else if (cargo.includes('Módulos')) {
           const valorModulo = basicoCargo;
           basicoCargo = valorModulo * modulos;
 
-          const proporcional455 = valorModulo * modulos * 0.4057;
-          const proporcional667 = valorModulo * modulos * 0.425;
+          const proporcional455 = valorModulo * modulos * salarioMes.porcentaje455;
+          const proporcional667 = valorModulo * modulos * salarioMes.porcentaje667;
 
           const disponible455 = maxAdicional455 - totalAdicional455;
           const disponible667 = maxAdicional667 - totalAdicional667;
@@ -860,16 +894,16 @@
           totalAdicional455 += adicional455;
           totalAdicional667 += adicional667;
 
-          const adicionalDesf = valorModulo * (desfavMap[desf] || 0) * modulos;
-          const adicionalAntig = valorModulo * (antiguedadMap[antig] || 0) * modulos;
+          const adicionalDesf = valorModulo * (salarioMes.desfavorabilidad[desf] || 0) * modulos;
+          const adicionalAntig = valorModulo * porcentajeAntiguedad(salarioMes,antig) * modulos;
 
           subtotal = basicoCargo + adicional667 + adicional455 + adicionalDesf + adicionalAntig;
 
           detalle += `
             <li>Valor por módulo: ${money(valorModulo)}</li>
             <li>Módulos: ${modulos} × ${money(valorModulo)} = ${money(basicoCargo)}</li>
-            <li>667 Bonificación No Jerárquica (42.5%): ${money(adicional667)}</li>
-            <li>455 Bonif. Docente agosto 2008 (40.57%): ${money(adicional455)}</li>
+            <li>667 Bonificación No Jerárquica (${(salarioMes.porcentaje667*100).toLocaleString('es-AR')}%): ${money(adicional667)}</li>
+            <li>455 Bonif. Docente agosto 2008 (${(salarioMes.porcentaje455*100).toLocaleString('es-AR')}%): ${money(adicional455)}</li>
             <li>Adicional desfavorabilidad: ${money(adicionalDesf)}</li>
             <li>Antigüedad (${antig} años): ${money(adicionalAntig)}</li>
           `;
@@ -883,7 +917,7 @@
         }
 
         if (!cargo.includes('Módulos')) {
-          const adicionalDesf = basico * (desfavMap[desf] || 0);
+          const adicionalDesf = basico * (salarioMes.desfavorabilidad[desf] || 0);
           subtotal += adicionalDesf;
           detalle += `<li>Adicional desfavorabilidad: ${money(adicionalDesf)}</li>`;
 
@@ -892,10 +926,11 @@
           detalle += `<li>Antigüedad (${antig} años): ${money(adicionalAntig)}</li>`;
         }
 
-        const compensacionConectividadCalculada = calcularCompensacionConectividadBase(cargo, modulos);
+        const compensacionConectividadCalculada = calcularCompensacionConectividadBase(cargo, modulos, salarioMes);
         const compensacionConectividadAplicada = aplicarTopeGlobalConectividad(
           compensacionConectividadCalculada,
-          totalConectividad
+          totalConectividad,
+          salarioMes
         );
 
         totalConectividadSinTope += compensacionConectividadCalculada;
@@ -919,8 +954,8 @@
         total += subtotal;
       }
 
-      const descuentoIPS = total * 0.16;
-      const descuentoIOMA = total * 0.048;
+      const descuentoIPS = total * salarioMes.descuentoIPS;
+      const descuentoIOMA = total * salarioMes.descuentoIOMA;
       const salarioBolsi = total - descuentoIPS - descuentoIOMA;
 
       breakdownHTML += `
@@ -934,7 +969,7 @@
         <ul>
           <li>
             Total Compensación por conectividad aplicada:
-            ${money(totalConectividad)} / ${money(COMPENSACION_CONECTIVIDAD_MAX_GLOBAL)}
+            ${money(totalConectividad)} / ${money(salarioMes.compensacionConectividadMaxGlobal)}
           </li>
           ${conectividadFueTopada ? `
             <li>Total calculado antes del tope: ${money(totalConectividadSinTope)}</li>
@@ -943,8 +978,8 @@
         </ul>
         <h3>Descuentos</h3>
         <ul>
-          <li>IPS (16%): -${money(descuentoIPS)}</li>
-          <li>IOMA (4.8%): -${money(descuentoIOMA)}</li>
+          <li>IPS (${(salarioMes.descuentoIPS*100).toLocaleString('es-AR')}%): -${money(descuentoIPS)}</li>
+          <li>IOMA (${(salarioMes.descuentoIOMA*100).toLocaleString('es-AR')}%): -${money(descuentoIOMA)}</li>
         </ul>
       `;
 
@@ -959,6 +994,8 @@
         </div>
       `;
       salaryBreakdown.innerHTML = breakdownHTML;
+      lastCalculatedRates=JSON.stringify(salarioMes);
+      saveActiveMonth();
 
       // UX: bajar a resultados (sin tocar cálculos)
       setTimeout(() => {

@@ -1,0 +1,105 @@
+CALCULADORA SALARIAL DOCENTE — DOCENTES BROWN
+Versión con meses independientes y administración salarial
+==========================================================
+
+ARCHIVOS
+  index.html          Calculadora pública para docentes.
+  admin.html          Panel de administración salarial.
+  salary-schema.js    Estructura y nombres de los 78 campos editables.
+  salarios.json       Escalas mensuales publicadas (INICIALMENTE VACÍO).
+  google1da0df38ecfe696a.html    Archivo de verificación existente.
+
+CAMBIOS PRINCIPALES
+1. Los docentes seleccionan el MES DE COBRO de una lista con períodos publicados.
+2. Se conserva la antigüedad, cantidad y detalle de cargos, resultado del último
+   cálculo y desglose POR MES en el almacenamiento local del navegador.
+3. Los datos personales NO se envían a GitHub ni a un servidor; no se sincronizan
+   con otros navegadores ni dispositivos. No borrar los datos del sitio si se
+   desea conservar el historial.
+4. La calculadora muestra exclusivamente períodos en estado "publicado".
+5. Los valores salariales se leen del archivo salarios.json, NO de Google Sheets.
+6. El administrador puede editar 78 campos: básico, adicionales por cargo,
+   índices, antigüedad, desfavorabilidad, topes, conectividad y descuentos.
+7. NO se agregó ningún comparador de meses.
+
+ATENCIÓN: EL ARCHIVO DE ESCALAS ARRANCA VACÍO
+El ZIP ORIGINAL guardaba los importes de muchos conceptos dentro del HTML, pero
+el BÁSICO POR MES venía desde una planilla externa y no estaba en el ZIP.
+Para no inventar cifras ni atribuirlas a octubre/noviembre de 2026, el archivo
+salarios.json entregado NO contiene meses publicados. Es necesario cargar y
+publicar el primer período antes de que la nueva calculadora pueda calcular.
+
+CÓMO CARGAR EL PRIMER MES
+1. Subí estos archivos a tu repositorio GitHub Pages manteniéndolos juntos en
+   la misma carpeta (normalmente la raíz donde está index.html).
+2. Entrá a https://TU-SITIO/admin.html (usá la misma dirección que la
+   calculadora y reemplazá index.html por admin.html).
+3. En «Crear un nuevo mes», elegí el período de cobro.
+4. «Copiar valores desde» → «Valores originales del código (sin básico)» para
+   el primer mes. Son valores tomados del código previo, NO escala certificada.
+5. Cargá el BÁSICO de referencia correcto y verificá todos los conceptos.
+6. Activá la casilla «Este mes está publicado para los docentes».
+7. Configurá abajo GitHub: propietario, nombre real del repositorio, rama
+   desde la que se publica el sitio (por ejemplo, main) y token autorizado.
+8. Tocá «Conectar y leer GitHub» ANTES DE EDITAR cuando quieras obtener lo
+   publicado. Si ya editaste meses locales, descargá primero el archivo JSON
+   para no perder tus cambios al leer GitHub.
+9. Para la primera publicación, si creaste el mes ANTES de conectar GitHub,
+   descargá salarios.json como respaldo, conectá, leé GitHub y volvé a
+   importar el respaldo. Luego tocá «Publicar todos los cambios».
+10. Esperá a que GitHub Pages publique el cambio. La web leerá los nuevos
+    períodos cuando se abra o recargue.
+
+SUGERENCIA DE USO NORMAL (evita el paso 9):
+  Primero conectá y leé GitHub; después creá/editá los meses y publicá.
+
+PARA AGREGAR MESES SIGUIENTES
+  1. Ingresá a admin.html.
+  2. Conectá y leé GitHub para obtener lo más reciente.
+  3. Creá el mes nuevo, copiando el mes previo como punto de partida.
+  4. Corregí los conceptos, el básico y los topes que correspondan.
+  5. Marcá el mes nuevo como publicado.
+  6. Publicá cambios.
+
+SOBRE EL ACCESO DE ADMINISTRADOR
+No se utilizó una «contraseña secreta» escrita dentro del HTML porque cualquier
+visitante podría verla en el código fuente. La operación que cambia los datos
+visibles a todos se autentica con permisos de GitHub. Cualquiera puede abrir
+admin.html y preparar borradores en SU navegador, pero SOLO quien dispone del
+token con permisos adecuados podrá escribir en el repositorio.
+
+En GitHub generá un PERSONAL ACCESS TOKEN de permisos restringidos a ese
+repositorio y a «Contents: Read and write». No lo publiques, no lo pongas en el
+HTML ni se lo compartas a nadie. El panel no lo guarda en localStorage.
+El repositorio debe existir y GitHub Pages debe publicar desde la rama elegida.
+Si el sitio publica desde otra rama o un directorio distinto, hay que adaptar
+la ubicación del archivo salarios.json y el despliegue.
+
+ALTERNATIVA SIN TOKEN
+En admin.html podés descargar el archivo salarios.json e incorporarlo a mano
+al repositorio/carpeta publicada. También podés importar un respaldo previo.
+El botón de publicación de GitHub no funcionará sin una cuenta autorizada.
+
+ALCANCE Y CUIDADOS
+- Las cifras heredadas provienen del código ZIP original y no se verificaron
+  como escala oficial para ningún mes.
+- El período debe editarse completo y revisarse antes de ponerlo público.
+- Para corregir un período ya publicado, editá ese mismo mes y publicá de nuevo.
+- La actualización afecta a quienes abren/recargan la calculadora. Si un docente
+  recupera un resultado guardado con cifras anteriores, aparece un aviso para
+  volver a calcular.
+- Hay valores de origen que podrían requerir mejoras en criterios liquidatorios.
+  Se conservaron los procedimientos generales de cálculo del HTML original.
+- La calculadora sigue siendo orientativa, no un recibo oficial.
+- Las personas pueden perder su historial si borran el almacenamiento local,
+  usan modo incógnito o cambian de dispositivo.
+
+PRUEBAS REALIZADAS
+- Verificación de sintaxis JavaScript.
+- Prueba en Chromium (sin acceso externo) del editor de 78 campos.
+- Períodos independientes octubre/noviembre con básicos de PRUEBA no publicados.
+- Recuperación de formularios, recibos y resultados anteriores por mes.
+- Bloqueo de cálculo cuando todavía no hay ningún mes publicado.
+- Prueba simulada de GitHub Contents API (lectura y escritura con SHA).
+
+Docentes Brown — Versión para revisión y despliegue.

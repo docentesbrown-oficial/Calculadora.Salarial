@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-20T17:11:11.850Z",
+  "updatedAt": "2026-10-20T17:51:22.146Z",
   "periodos": {
     "2026-09": {
-      "estado": "borrador",
+      "estado": "publicado",
       "basicoReferencia": 349693,
       "conceptos": {
         "maestro_0641": 234294.21,
